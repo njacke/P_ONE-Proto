@@ -51,7 +51,6 @@ public class G01_Entity : MonoBehaviour
         }
 
         if (_colorType == ColorType.None && _shapeType != ShapeType.None) {
-            Debug.Log("update entity color change called.");
             _colorType = colorType;
             int colorIndex = (int)_colorType; // sprite array order (index) needs to be the same as enum index!
             _spriteRenderer.sprite = _shapeSpriteMap[_shapeType][colorIndex];

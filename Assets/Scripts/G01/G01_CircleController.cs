@@ -6,6 +6,7 @@ public class G01_CircleController : MonoBehaviour
 {
     [SerializeField] private G01_Ring _ringColor;
     [SerializeField] private G01_Ring _ringShape;
+    [SerializeField] private G01_Launcher _launcher;
     private G01_Ring.RingType _selectedRing = G01_Ring.RingType.Shape;
 
     private void Update()
@@ -15,6 +16,9 @@ public class G01_CircleController : MonoBehaviour
     }
 
     private void NoSelectionInput() {
+        if (Input.GetKeyDown(KeyCode.Space)) {
+            _launcher.FireProjectile();
+        }
         if (Input.GetKey(KeyCode.Q))
         {
             _ringColor.RotateRing(false);
@@ -30,6 +34,9 @@ public class G01_CircleController : MonoBehaviour
         if (Input.GetKey(KeyCode.S))
         {
             _ringShape.RotateRing(true);
+        }
+        if (Input.GetKeyDown(KeyCode.Escape)) {
+            Application.Quit();
         }
     }
 
