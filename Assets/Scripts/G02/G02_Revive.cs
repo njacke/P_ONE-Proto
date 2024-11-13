@@ -4,10 +4,7 @@ using UnityEngine;
 
 public class G02_Revive : MonoBehaviour
 {
-    [SerializeField] private int _startCD = 5;
-    private bool _firstUse = true;
-
-    public bool UseRevive(Vector3 targetPos) {
+    public bool UseRevive(Vector3 targetPos, bool firstReviveUsed) {
         RaycastHit2D hit = Physics2D.Raycast(targetPos, Vector2.zero);
 
         if (hit.collider == null) {
@@ -19,9 +16,8 @@ public class G02_Revive : MonoBehaviour
             return false;
         }
 
-        if (_firstUse && npc.CurrentNpcStatus == G02_NPC.NpcStatus.Hostile) {
+        if (!firstReviveUsed && npc.CurrentNpcStatus == G02_NPC.NpcStatus.Hostile) {
             npc.CurrentNpcStatus = G02_NPC.NpcStatus.Friendly;
-            _firstUse = false;
             Debug.Log("Blood sacrifice was used on " + npc.gameObject.name);
             return true;
         }

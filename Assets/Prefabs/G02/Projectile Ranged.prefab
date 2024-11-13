@@ -11,9 +11,9 @@ GameObject:
   - component: {fileID: 1966382122058862752}
   - component: {fileID: 6663539869194838340}
   - component: {fileID: 7139359279398157645}
-  - component: {fileID: 1616587885002780192}
+  - component: {fileID: -7801170210293955084}
   m_Layer: 0
-  m_Name: Projectile
+  m_Name: Projectile Ranged
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -121,7 +121,7 @@ CircleCollider2D:
   m_Offset: {x: 0, y: 0}
   serializedVersion: 2
   m_Radius: 0.5
---- !u!114 &1616587885002780192
+--- !u!114 &-7801170210293955084
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -130,7 +130,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 5194406457498343766}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9c311fed55d28ff4eb6545554535f622, type: 3}
+  m_Script: {fileID: 11500000, guid: 60e21128252f5fa409c210376e9ef1af, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _moveSpeed: 5
+  _moveSpeed: 4

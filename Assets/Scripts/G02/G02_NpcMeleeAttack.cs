@@ -18,17 +18,8 @@ public class G02_NpcMeleeAttack : G02_NpcAttack
     }
 
     private void OnTriggerEnter2D(Collider2D other) {
-        G02_NPC npc = other.GetComponent<G02_NPC>();
-
-        if (AttackType == G02_NPC.NpcStatus.Hostile) {
-            if (other.GetComponent<G02_PlayerController>()) {
-                Debug.Log("Player took damage");
-            } else if (npc != null && npc.CurrentNpcStatus == G02_NPC.NpcStatus.Friendly) {
-                Debug.Log("Friendly NPC took damage");
-            }
-        } else if (AttackType == G02_NPC.NpcStatus.Friendly && npc != null && npc.CurrentNpcStatus == G02_NPC.NpcStatus.Hostile) {
-            Debug.Log("Enemy NPC took damage");
-        }
+        G02_IDamageable damageable = other.gameObject.GetComponent<G02_IDamageable>();
+        damageable?.TakeDamage(AttackType, _attackDamage);
     }
 
 

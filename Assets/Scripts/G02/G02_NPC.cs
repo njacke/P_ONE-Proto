@@ -1,24 +1,32 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Transactions;
-using UnityEditor;
+using TMPro;
 using UnityEngine;
-using UnityEngine.SocialPlatforms.GameCenter;
-using UnityEngine.Timeline;
 
-public class G02_NPC : MonoBehaviour
+public class G02_NPC : MonoBehaviour, G02_IDamageable
 {
+    public static Action<GameObject> OnStatusChange;
+    public static Action<NpcStatus, int> OnDamageTaken;
+    public static Action<NpcStatus> OnDeath;
+
     [SerializeField] private NpcStatus _currentNpcStatus = NpcStatus.Hostile;
+    [SerializeField] private int _startHP = 1;
     [SerializeField] private float _moveSpeed = 1f;
     [SerializeField] private float _startMoveDirCD = 3f;
     [SerializeField] private float _chaseRange = 3f;
     [SerializeField] private float _targetScanRadius = 10f;
     [SerializeField] private G02_NpcAttack _npcAttack;
+    [SerializeField] private TextMeshPro _textHP;
     public NpcStatus CurrentNpcStatus { get { return _currentNpcStatus; } set { UpdateNpcStatus(value); } }
+    public int GetCurrentHP { get { return _currentHP; } }
+    public float GetMoveSpeed { get { return _moveSpeed; } }
+    public int GetStartAttackCD { get { return _currentHP; } }
+    private bool _isFeared = false;
     private SpriteRenderer _spriteRenderer;
     private NpcState _currentNpcState = NpcState.None;
-    private Transform _player;
+    private int _currentHP = 0;
     private Transform _currentTarget = null;
     private Vector2 _currentMoveDir = Vector2.zero;
     private float _currentMoveDirCD = 0f;
@@ -47,13 +55,12 @@ public class G02_NPC : MonoBehaviour
 
     private void Awake() {
         _spriteRenderer = GetComponent<SpriteRenderer>();
+        UpdateHP(_startHP);
         _attackRange = _npcAttack.GetAttackRange;
         _startAttackCD = _npcAttack.GetAttackCD;
     }
 
     private void Start() {
-        _player = FindObjectOfType<G02_PlayerController>().transform;
-
         _xMin = G02_GameManager.Instance.MinXBoundry;
         _xMax = G02_GameManager.Instance.MaxXBoundry;
         _yMin = G02_GameManager.Instance.MinYBoundry;
@@ -62,25 +69,42 @@ public class G02_NPC : MonoBehaviour
         UpdateNpcStatus(_currentNpcStatus);
     }
 
-    private void Update() {
-        NpcStateTransition();
+    private void OnEnable() {
+        G02_NPC.OnStatusChange += G02_NPC_OnStatusChange;        
+    }
 
+    private void OnDisable() {
+        G02_NPC.OnStatusChange -= G02_NPC_OnStatusChange;        
+    }
+
+    private void G02_NPC_OnStatusChange(GameObject sender) {
+        if (_currentTarget != null && sender.gameObject == _currentTarget.gameObject) {
+            _currentTarget = null;
+        }
+    }
+
+    private void Update() {
         _currentMoveDirCD -= Time.deltaTime;
         _currentAttackCD -= Time.deltaTime;
 
-        if (_currentMoveDirCD <= 0f) {
-            _currentMoveDir = GetRandomMoveDir();
-            _currentMoveDirCD = _startMoveDirCD;
+        if (!_isFeared) {
+            NpcStateTransition();
+            if (_currentMoveDirCD <= 0f) {
+                _currentMoveDir = GetRandomMoveDir();
+                _currentMoveDirCD = _startMoveDirCD;
+            }
         }
     }
 
     private void FixedUpdate() {
-        if (_currentNpcState == NpcState.Roaming) {
-            Roam();
-        } else if (_currentNpcState == NpcState.Chasing) {
-            Chase();
-        } else if (_currentNpcState == NpcState.Attacking) {
-            Attack();
+        if (CurrentNpcStatus == NpcStatus.Hostile || CurrentNpcStatus == NpcStatus.Friendly) {
+            if (_currentNpcState == NpcState.Roaming) {
+                Roam();
+            } else if (_currentNpcState == NpcState.Chasing) {
+                Chase();
+            } else if (_currentNpcState == NpcState.Attacking) {
+                Attack();
+            }
         }
     }
 
@@ -88,6 +112,10 @@ public class G02_NPC : MonoBehaviour
     private void UpdateNpcStatus(NpcStatus newNpcStatus) {
         _currentNpcStatus = newNpcStatus;
         _npcAttack.AttackType = newNpcStatus;
+
+        if (newNpcStatus == NpcStatus.Friendly) {
+            UpdateHP(_startHP); // reset HP when revived
+        }
         
         _spriteRenderer.color = newNpcStatus switch {
             NpcStatus.Hostile => Color.red,
@@ -95,14 +123,15 @@ public class G02_NPC : MonoBehaviour
             NpcStatus.Friendly => Color.green,
             _ => _spriteRenderer.color
         };
-
-        
+ 
         _currentTarget = GetClosestTargetInRange();
+
+        OnStatusChange?.Invoke(this.gameObject);
     }
 
     private Transform GetClosestTargetInRange() {
         Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, _targetScanRadius);
-            var sortedHits = hits.OrderBy(hit => Vector2.Distance(transform.position, hit.transform.position));
+        var sortedHits = hits.OrderBy(hit => Vector2.Distance(transform.position, hit.transform.position));
 
         foreach (var hit in sortedHits) {
             G02_NPC npc = hit.GetComponent<G02_NPC>();
@@ -123,6 +152,9 @@ public class G02_NPC : MonoBehaviour
 
     private void NpcStateTransition() {
         if (_currentTarget == null) {
+            if (_currentNpcState != NpcState.Roaming && (CurrentNpcStatus == NpcStatus.Hostile || CurrentNpcStatus == NpcStatus.Friendly)) {
+                _currentNpcState = NpcState.Roaming;
+            }
             return;
         }
 
@@ -130,18 +162,18 @@ public class G02_NPC : MonoBehaviour
 
         if (_currentNpcStatus != NpcStatus.None) {
             if (_currentNpcStatus == NpcStatus.Corpse && _currentNpcState != NpcState.None) {
-                Debug.Log("Switching to none state");
+                //Debug.Log("Switching to none state");
                 _currentNpcState = NpcState.None;
             } else if (_currentNpcState != NpcState.Roaming && targetDistance > _chaseRange) {
-                Debug.Log("Switching to roaming state");
+                //Debug.Log("Switching to roaming state");
                 _currentNpcState = NpcState.Roaming;
                 _currentTarget = GetClosestTargetInRange();
             } else if (_currentNpcState != NpcState.Chasing && targetDistance > _attackRange && targetDistance <= _chaseRange) {
-                Debug.Log("Switching to chasing state");
+                //Debug.Log("Switching to chasing state");
                 _currentNpcState = NpcState.Chasing;
                 _currentTarget = GetClosestTargetInRange();
             } else if (_currentNpcState != NpcState.Attacking && targetDistance <= _attackRange) {
-                Debug.Log("Switching to attacking state");
+               //Debug.Log("Switching to attacking state");
                 _currentNpcState = NpcState.Attacking;
                 _currentTarget = GetClosestTargetInRange();
             } 
@@ -181,8 +213,58 @@ public class G02_NPC : MonoBehaviour
 
         if (_currentAttackCD <= 0f) {
             _npcAttack.UseAttack(_currentTarget.position);
-            Debug.Log("Using attack");
+            //Debug.Log("Using attack");
             _currentAttackCD = _startAttackCD;
         }
+    }
+
+    public bool TakeDamage(NpcStatus damageType, int damageAmount) {
+        if (CurrentNpcStatus == NpcStatus.Hostile && damageType == NpcStatus.Friendly) {
+            UpdateHP(_currentHP - damageAmount);
+            OnDamageTaken?.Invoke(CurrentNpcStatus, damageAmount);
+
+            if (_currentHP <= 0) {
+            Debug.Log("Hostile NPC died; updating to corpse");
+            OnDeath?.Invoke(CurrentNpcStatus);
+            UpdateNpcStatus(NpcStatus.Corpse);
+            return true;
+            }
+        } else if (CurrentNpcStatus == NpcStatus.Friendly && damageType == NpcStatus.Hostile) {
+            UpdateHP(_currentHP - damageAmount);
+            OnDamageTaken?.Invoke(CurrentNpcStatus, damageAmount);
+            
+            if (_currentHP <= 0) {
+            Debug.Log("Friendly NPC died; destroying object");
+            OnDeath?.Invoke(CurrentNpcStatus);
+            Destroy(this.gameObject);
+            return true;
+            }
+        }
+        return false;
+    }
+
+    public void UpdateHP(int newHP) {
+        _currentHP = newHP;
+        _textHP.text = newHP.ToString();
+    }
+
+    public void UpdateMoveSpeed(float newSpeed) {
+        _moveSpeed = newSpeed;
+    }
+
+    public void UpdateAttackCD(float newAttackCD) {
+        _startAttackCD = newAttackCD;
+    }
+
+    public void SetFear(bool isFeared, float moveSpeed) {
+        if (isFeared) {
+            _isFeared = isFeared;
+            _currentNpcState = NpcState.Roaming;
+            _currentMoveDir = GetRandomMoveDir();
+        } else {
+            _isFeared = false;
+        }
+
+        _moveSpeed = moveSpeed;
     }
 }

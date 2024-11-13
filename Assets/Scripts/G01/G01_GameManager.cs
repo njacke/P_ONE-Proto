@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class G01_GameManager : Singleton<G01_GameManager>
 {
@@ -33,7 +34,7 @@ public class G01_GameManager : Singleton<G01_GameManager>
 
 
     private void Start() {
-        ResetGame();
+        InitGame();
     }
 
     private void OnEnable() {
@@ -69,13 +70,14 @@ public class G01_GameManager : Singleton<G01_GameManager>
     private void TakeDamage() {
         _currentHP--;
         if (_currentHP <= 0) {
-            ResetGame();
-        } else {
+            var activeScene = SceneManager.GetActiveScene();
+            SceneManager.LoadScene(activeScene.name);
+            } else {
             OnGameStateChanged?.Invoke();
         }
     }
 
-    private void ResetGame() {
+    private void InitGame() {
         _currentHP = _startHP;
         _currentScore = 0;        
         _currentProjectileSpeed = _startProjectileSpeed;
@@ -83,7 +85,6 @@ public class G01_GameManager : Singleton<G01_GameManager>
         _currentTargetSpawnDelay = _startTargetSpawnDelay;
         _currentMinTargetTimer = _startMinTargetTimer;
         _currentMaxTargetTimer = _startMaxTargetTimer;
-
         OnGameStateChanged?.Invoke();
     }
 }

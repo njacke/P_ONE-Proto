@@ -14,6 +14,8 @@ public class G02_NpcRangedAttack : G02_NpcAttack
         Debug.Log("Spawning projectile");
 
         var newProjectile = Instantiate(_projectilePrefab, this.transform.position, rotation).GetComponent<G02_Projectile>();
-        newProjectile.ProjectileType = AttackType;
+        newProjectile.DamageType = AttackType;
+        newProjectile.ProjectileDamage = _attackDamage;
+        newProjectile.TargetDist = Vector3.Distance(this.transform.position, targetPos);
     }
 }

@@ -4,30 +4,13 @@ using UnityEngine;
 
 public class G02_Projectile : MonoBehaviour
 {
-    [SerializeField] private float _moveSpeed = 10f;
+    [SerializeField] protected float _moveSpeed = 10f;
+    public G02_NPC.NpcStatus DamageType { get; set; }
     public int ProjectileDamage { get; set; } = 0;
-    public G02_NPC.NpcStatus ProjectileType { get; set; }
+    public float TargetDist { get; set; }
 
-
-    private void Update() {
+    protected virtual void Update() {
         MoveProjectile();
-    }
-
-    private void OnTriggerEnter2D(Collider2D other) {
-       G02_NPC npc = other.GetComponent<G02_NPC>();
-
-        if (ProjectileType == G02_NPC.NpcStatus.Hostile) {
-            if (other.GetComponent<G02_PlayerController>()) {
-                Debug.Log("Player took damage");
-                Destroy(this.gameObject);
-            } else if (npc != null && npc.CurrentNpcStatus == G02_NPC.NpcStatus.Friendly) {
-                Debug.Log("Friendly NPC took damage");
-                Destroy(this.gameObject);
-            }
-        } else if (ProjectileType == G02_NPC.NpcStatus.Friendly && npc != null && npc.CurrentNpcStatus == G02_NPC.NpcStatus.Hostile) {
-            Debug.Log("Enemy NPC took damage");
-            Destroy(this.gameObject);
-        }
     }
 
     private void MoveProjectile() {
