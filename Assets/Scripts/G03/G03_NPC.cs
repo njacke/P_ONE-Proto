@@ -5,7 +5,7 @@ using System.Linq;
 using TMPro;
 using UnityEngine;
 
-public class G02_NPC : MonoBehaviour, G02_IDamageable
+public class G03_NPC : MonoBehaviour, G03_IDamageable
 {
     public static Action<GameObject> OnStatusChange;
     public static Action<NpcStatus, int> OnDamageTaken;
@@ -17,7 +17,7 @@ public class G02_NPC : MonoBehaviour, G02_IDamageable
     [SerializeField] private float _startMoveDirCD = 3f;
     [SerializeField] private float _chaseRange = 3f;
     [SerializeField] private float _targetScanRadius = 10f;
-    [SerializeField] private G02_NpcAttack _npcAttack;
+    [SerializeField] private G03_NpcAttack _npcAttack;
     [SerializeField] private TextMeshPro _textHP;
     public NpcStatus CurrentNpcStatus { get { return _currentNpcStatus; } set { UpdateNpcStatus(value); } }
     public int GetCurrentHP { get { return _currentHP; } }
@@ -25,6 +25,7 @@ public class G02_NPC : MonoBehaviour, G02_IDamageable
     public int GetStartAttackCD { get { return _currentHP; } }
     private bool _isFeared = false;
     private SpriteRenderer _spriteRenderer;
+    private Collider2D _myCollider;
     private NpcState _currentNpcState = NpcState.None;
     private int _currentHP = 0;
     private Transform _currentTarget = null;
@@ -57,48 +58,34 @@ public class G02_NPC : MonoBehaviour, G02_IDamageable
 
     private void Awake() {
         _spriteRenderer = GetComponent<SpriteRenderer>();
+        _myCollider = GetComponent<Collider2D>();
         UpdateHP(_startHP);
         _attackRange = _npcAttack.GetAttackRange;
         _startAttackCD = _npcAttack.GetAttackCD;
     }
 
     private void Start() {
-        _xMin = G02_GameManager.Instance.MinXBoundry;
-        _xMax = G02_GameManager.Instance.MaxXBoundry;
-        _yMin = G02_GameManager.Instance.MinYBoundry;
-        _yMax = G02_GameManager.Instance.MaxYBoundry;
+        _xMin = G03_GameManager.Instance.MinXBoundry;
+        _xMax = G03_GameManager.Instance.MaxXBoundry;
+        _yMin = G03_GameManager.Instance.MinYBoundry;
+        _yMax = G03_GameManager.Instance.MaxYBoundry;
 
         UpdateNpcStatus(_currentNpcStatus);
     }
 
     private void OnEnable() {
-        G02_NPC.OnStatusChange += G02_NPC_OnStatusChange; 
-        G02_PlayerController.OnOrderStarted += G02_PlayerController_OnOrderStarted;       
-        G02_PlayerController.OnOrderEnded += G02_PlayerController_OnOrderEnded;       
+        G03_NPC.OnStatusChange += G03_NPC_OnStatusChange;    
     }
 
     private void OnDisable() {
-        G02_NPC.OnStatusChange -= G02_NPC_OnStatusChange;        
-        G02_PlayerController.OnOrderStarted -= G02_PlayerController_OnOrderStarted;       
-        G02_PlayerController.OnOrderEnded -= G02_PlayerController_OnOrderEnded;       
+        G03_NPC.OnStatusChange -= G03_NPC_OnStatusChange;            
     }
 
 
-    private void G02_NPC_OnStatusChange(GameObject sender) {
+    private void G03_NPC_OnStatusChange(GameObject sender) {
         if (_currentTarget != null && sender.gameObject == _currentTarget.gameObject) {
             _currentTarget = null;
         }
-    }
-
-    private void G02_PlayerController_OnOrderStarted(Vector3 orderPos) {
-        if (_currentNpcState == NpcState.Roaming && CurrentNpcStatus == NpcStatus.Friendly) {
-            _currentOrderPos = orderPos;
-            _hasOrder = true;
-        }
-    }
-
-    private void G02_PlayerController_OnOrderEnded() {
-        _hasOrder = false;
     }
 
     private void Update() {
@@ -134,6 +121,7 @@ public class G02_NPC : MonoBehaviour, G02_IDamageable
         if (newNpcStatus == NpcStatus.Friendly) {
             UpdateHP(_startHP); // reset HP when revived
             _hasOrder = false;
+            _myCollider.enabled = false; // disable collider if using dynamic physics; G03 only
         }
         
         _spriteRenderer.color = newNpcStatus switch {
@@ -153,11 +141,9 @@ public class G02_NPC : MonoBehaviour, G02_IDamageable
         var sortedHits = hits.OrderBy(hit => Vector2.Distance(transform.position, hit.transform.position));
 
         foreach (var hit in sortedHits) {
-            G02_NPC npc = hit.GetComponent<G02_NPC>();
-            G02_PlayerController player = hit.GetComponent<G02_PlayerController>();
+            G03_NPC npc = hit.GetComponent<G03_NPC>();
 
-            if (_currentNpcStatus == NpcStatus.Hostile && 
-                ((npc != null && npc.CurrentNpcStatus == NpcStatus.Friendly) || player != null)) {
+            if (_currentNpcStatus == NpcStatus.Hostile && npc != null && npc.CurrentNpcStatus == NpcStatus.Friendly) {
                 return hit.transform;
             }
 
@@ -246,6 +232,8 @@ public class G02_NPC : MonoBehaviour, G02_IDamageable
     }
 
     public bool TakeDamage(NpcStatus damageType, int damageAmount) {
+        Debug.Log("Take damage entered.");
+        Debug.Log(CurrentNpcStatus.ToString() + " " + damageType.ToString());
         if (CurrentNpcStatus == NpcStatus.Hostile && damageType == NpcStatus.Friendly) {
             UpdateHP(_currentHP - damageAmount);
             OnDamageTaken?.Invoke(CurrentNpcStatus, damageAmount);
@@ -271,6 +259,7 @@ public class G02_NPC : MonoBehaviour, G02_IDamageable
     }
 
     public void UpdateHP(int newHP) {
+        Debug.Log("Update HP called");
         _currentHP = newHP;
         _textHP.text = newHP.ToString();
     }

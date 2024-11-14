@@ -12,9 +12,9 @@ public class G02_BuffAttack : G02_Skill
 
     private IEnumerator BuffAttackRoutine(G02_NPC npc) {
         var ogAttack = npc.GetStartAttackCD;
-        var newAttack = ogAttack * + _baseAttackBuff * _skillPower;
-        npc.UpdateAttackCD(newAttack);
+        var newAttack = ogAttack / (_baseAttackBuff * _skillPower);
+        npc.UpdateAttackCD(newAttack, true);
         yield return new WaitForSeconds(_skillDuration);
-        npc.UpdateAttackCD(ogAttack);
+        npc.UpdateAttackCD(ogAttack, false);
     }
 }

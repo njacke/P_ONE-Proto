@@ -6,6 +6,7 @@ public class G02_EnemySpawner : MonoBehaviour
 {
     [SerializeField] private GameObject[] _enemyPrefabs;
     [SerializeField] private GameObject _spawnIndicator;
+    [SerializeField] private int _initialSpawnCount = 2;
     [SerializeField] private float _startSpawnCd = 5f;
     [SerializeField] private float _spawnCdAdjustment = .05f;
     [SerializeField] private float _spawnDelay = 1f;
@@ -15,11 +16,19 @@ public class G02_EnemySpawner : MonoBehaviour
     private float _yMin;
     private float _yMax;
 
+    private void Awake() {
+        _currentSpawnCD = _startSpawnCd;
+    }
+
     private void Start() {
         _xMin = G02_GameManager.Instance.MinXBoundry;
         _xMax = G02_GameManager.Instance.MaxXBoundry;
         _yMin = G02_GameManager.Instance.MinYBoundry;
-        _yMax = G02_GameManager.Instance.MaxYBoundry;        
+        _yMax = G02_GameManager.Instance.MaxYBoundry;   
+
+        for (int i = 0; i < _initialSpawnCount; i++) {
+            StartCoroutine(SpawnEnemy());
+        }     
     }
 
     private void Update() {

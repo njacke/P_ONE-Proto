@@ -298,8 +298,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e54c7942211f17e438d10c060a8c3b2a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _attackRange: 3
-  _attackCD: 5
+  _attackRange: 2.5
+  _attackCD: 3
   _attackDamage: 2
   _projectilePrefab: {fileID: 6409000552057762650, guid: aacfa45d335ae5c4d9ec47baa2fe63cc, type: 3}
 --- !u!4 &5805347265344907209 stripped

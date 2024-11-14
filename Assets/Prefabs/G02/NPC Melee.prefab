@@ -183,6 +183,10 @@ PrefabInstance:
       propertyPath: _attackCD
       value: 1.5
       objectReference: {fileID: 0}
+    - target: {fileID: 7428174776964872614, guid: 53f997ef07ef25645ada303274fcd80e, type: 3}
+      propertyPath: _attackDuration
+      value: 0.1
+      objectReference: {fileID: 0}
     - target: {fileID: 7432551547326676040, guid: 53f997ef07ef25645ada303274fcd80e, type: 3}
       propertyPath: _textHP
       value: 
@@ -193,7 +197,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7432551547326676040, guid: 53f997ef07ef25645ada303274fcd80e, type: 3}
       propertyPath: _moveSpeed
-      value: 1.5
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 7432551547326676040, guid: 53f997ef07ef25645ada303274fcd80e, type: 3}
       propertyPath: _chaseRange
@@ -201,7 +205,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7432551547326676040, guid: 53f997ef07ef25645ada303274fcd80e, type: 3}
       propertyPath: _startMoveDirCD
-      value: 2
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7432551547326676040, guid: 53f997ef07ef25645ada303274fcd80e, type: 3}
       propertyPath: _targetScanRadius

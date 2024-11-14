@@ -37,6 +37,13 @@ public class G01_GameManager : Singleton<G01_GameManager>
         InitGame();
     }
 
+    private void Update() {
+        if (Input.GetKeyDown(KeyCode.Escape)) {
+            SceneManager.LoadScene("MainMenu");
+            //Application.Quit();
+        }
+    }
+
     private void OnEnable() {
         G01_Target.OnTargetMatched += G01_Target_OnTargetMatched;
         G01_Target.OnTargetNotMatched += G01_Target_OnTargetNotMatched;

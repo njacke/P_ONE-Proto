@@ -31,6 +31,12 @@ public class G02_GameManager : Singleton<G02_GameManager>
         OnXpChange?.Invoke(_currentLvl, _currentLvlXp, Mathf.CeilToInt(_lvlUpXpReq));
     }
 
+    private void Update() {
+        if (Input.GetKeyDown(KeyCode.Escape)) {
+            SceneManager.LoadScene("MainMenu");
+        }
+    }
+
     private void SetUpMoveBoundries() {
         Camera gameCamera = Camera.main;
         MinXBoundry = gameCamera.ViewportToWorldPoint(new Vector3(0, 0, 0)).x + _padding;

@@ -19,24 +19,17 @@ public class G01_CircleController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space)) {
             _launcher.FireProjectile();
         }
-        if (Input.GetKey(KeyCode.Q))
-        {
+        if (Input.GetKey(KeyCode.Q)) {
             _ringColor.RotateRing(false);
         }
-        if (Input.GetKey(KeyCode.W))
-        {
+        if (Input.GetKey(KeyCode.W)) {
             _ringColor.RotateRing(true);
         }
-        if (Input.GetKey(KeyCode.A))
-        {
+        if (Input.GetKey(KeyCode.A)) {
             _ringShape.RotateRing(false);
         }
-        if (Input.GetKey(KeyCode.S))
-        {
+        if (Input.GetKey(KeyCode.S)) {
             _ringShape.RotateRing(true);
-        }
-        if (Input.GetKeyDown(KeyCode.Escape)) {
-            Application.Quit();
         }
     }
 

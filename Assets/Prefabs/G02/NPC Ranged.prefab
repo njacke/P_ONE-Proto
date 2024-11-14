@@ -208,6 +208,10 @@ PrefabInstance:
       value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 7432551547326676040, guid: 53f997ef07ef25645ada303274fcd80e, type: 3}
+      propertyPath: _startMoveDirCD
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7432551547326676040, guid: 53f997ef07ef25645ada303274fcd80e, type: 3}
       propertyPath: _targetScanRadius
       value: 10
       objectReference: {fileID: 0}
@@ -290,8 +294,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e54c7942211f17e438d10c060a8c3b2a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _attackRange: 4
-  _attackCD: 2
+  _attackRange: 6
+  _attackCD: 1.5
   _attackDamage: 1
   _projectilePrefab: {fileID: 5194406457498343766, guid: 90fdce14742150445a7ace4af4b52cc7, type: 3}
 --- !u!4 &5805347265344907209 stripped

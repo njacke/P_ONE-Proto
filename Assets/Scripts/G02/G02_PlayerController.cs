@@ -6,14 +6,20 @@ using UnityEngine;
 public class G02_PlayerController : Singleton<G02_PlayerController>, G02_IDamageable
 {
     public static Action<int> OnHpChange;
+    public static Action<Vector3> OnOrderStarted;
+    public static Action OnOrderEnded;
     [SerializeField] private int _startHP = 3;
     [SerializeField] private float _moveSpeed = 5f;
+    [SerializeField] private float _orderDur = 2f;
     [SerializeField] private SpriteRenderer _moveIndicator;
+    [SerializeField] private SpriteRenderer _orderIndicator;
     [SerializeField] private float _maxSkillRange = 5f;
     [SerializeField] private G02_SkillsManager _skillManager;
 
     private int _currentHP;
-    private Vector3 _currentMoveDir = Vector3.zero;
+    private Vector3 _currentMovePos = Vector3.zero;
+    private bool _isOrderActive = false;
+    private float _orderDurRemaining = 0f;
 
     private float _xMin;
     private float _xMax;
@@ -23,8 +29,9 @@ public class G02_PlayerController : Singleton<G02_PlayerController>, G02_IDamage
     protected override void Awake() {
         base.Awake();
         _currentHP = _startHP;
-        _currentMoveDir = this.transform.position;      
+        _currentMovePos = this.transform.position;      
         _moveIndicator.enabled = false;  
+        _orderIndicator.enabled = false;
     }
 
     private void Start() {
@@ -35,6 +42,13 @@ public class G02_PlayerController : Singleton<G02_PlayerController>, G02_IDamage
     }
 
     private void Update() {
+        _orderDurRemaining -= Time.deltaTime;
+        if (_isOrderActive && _orderDurRemaining < 0f) {
+            OnOrderEnded?.Invoke();
+            _isOrderActive = false;
+            _orderIndicator.enabled = false;
+        }
+
         //MoveOld();
         SkillInput();
         MoveInput();
@@ -47,15 +61,29 @@ public class G02_PlayerController : Singleton<G02_PlayerController>, G02_IDamage
             float newXPos = Mathf.Clamp(mouseWorldPos.x, _xMin, _xMax);
             float newYPos = Mathf.Clamp(mouseWorldPos.y, _yMin, _yMax);
             
-            _currentMoveDir = new Vector3 (newXPos, newYPos, 0);
-            _moveIndicator.gameObject.transform.position = _currentMoveDir;
+            _currentMovePos = new Vector3 (newXPos, newYPos, 0);
+            _moveIndicator.gameObject.transform.position = _currentMovePos;
             _moveIndicator.enabled = true;
+        }
+
+        if (Input.GetMouseButtonDown(1)) {
+            var mouseWorldPos = GetMouseWorldPos();
+            float newXPos = Mathf.Clamp(mouseWorldPos.x, _xMin, _xMax);
+            float newYPos = Mathf.Clamp(mouseWorldPos.y, _yMin, _yMax);
+            
+            var orderPos = new Vector3 (newXPos, newYPos, 0);
+            _orderIndicator.gameObject.transform.position = orderPos;
+            _orderIndicator.enabled = true;
+            _orderDurRemaining = _orderDur;
+            _isOrderActive = true;
+
+            OnOrderStarted?.Invoke(orderPos);
         }
     }
 
     private void Move() {
-            if (this.transform.position != _currentMoveDir) {
-                this.transform.position = Vector3.MoveTowards(this.transform.position, _currentMoveDir, _moveSpeed * Time.deltaTime);
+            if (this.transform.position != _currentMovePos) {
+                this.transform.position = Vector3.MoveTowards(this.transform.position, _currentMovePos, _moveSpeed * Time.deltaTime);
             } else {
                 _moveIndicator.enabled = false;
             }            
@@ -110,7 +138,6 @@ public class G02_PlayerController : Singleton<G02_PlayerController>, G02_IDamage
             //Debug.Log("Current player HP: " + _currentHP);
             if (_currentHP <= 0) {
                 Debug.Log("Player died.");
-                Destroy(this.gameObject);
             }
             return true;
         }
