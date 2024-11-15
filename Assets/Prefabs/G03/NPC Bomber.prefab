@@ -48,13 +48,33 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1894313428665624065, guid: 6f286cf902c82e549a6f0432331aec12, type: 3}
-      propertyPath: _attackRange
-      value: 0.3
+    - target: {fileID: 322483987297710799, guid: 6f286cf902c82e549a6f0432331aec12, type: 3}
+      propertyPath: m_SpriteTilingProperty.oldSize.y
+      value: 0.8828125
       objectReference: {fileID: 0}
+    - target: {fileID: 525480073765049763, guid: 6f286cf902c82e549a6f0432331aec12, type: 3}
+      propertyPath: m_Name
+      value: Ranged Attack
+      objectReference: {fileID: 0}
+    - target: {fileID: 2023179230887415402, guid: 6f286cf902c82e549a6f0432331aec12, type: 3}
+      propertyPath: _startHP
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2023179230887415402, guid: 6f286cf902c82e549a6f0432331aec12, type: 3}
+      propertyPath: _moveSpeed
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2023179230887415402, guid: 6f286cf902c82e549a6f0432331aec12, type: 3}
+      propertyPath: _npcAttack
+      value: 
+      objectReference: {fileID: 6547361944441021455}
     - target: {fileID: 2023179230887415402, guid: 6f286cf902c82e549a6f0432331aec12, type: 3}
       propertyPath: _chaseRange
       value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 2023179230887415402, guid: 6f286cf902c82e549a6f0432331aec12, type: 3}
+      propertyPath: _startMoveDirCD
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2023179230887415402, guid: 6f286cf902c82e549a6f0432331aec12, type: 3}
       propertyPath: _targetScanRadius
@@ -62,10 +82,41 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3998772779184826790, guid: 6f286cf902c82e549a6f0432331aec12, type: 3}
       propertyPath: m_Name
-      value: NPC Melee
+      value: NPC Bomber
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    - target: {fileID: 8757680758733472689, guid: 6f286cf902c82e549a6f0432331aec12, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 2747690628134850419, guid: a9716c16a44a94eed9b5c90fbf4d9bdd, type: 3}
+    m_RemovedComponents:
+    - {fileID: 1894313428665624065, guid: 6f286cf902c82e549a6f0432331aec12, type: 3}
+    - {fileID: 3874188684401236931, guid: 6f286cf902c82e549a6f0432331aec12, type: 3}
+    m_RemovedGameObjects:
+    - {fileID: 5378533006656464145, guid: 6f286cf902c82e549a6f0432331aec12, type: 3}
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 525480073765049763, guid: 6f286cf902c82e549a6f0432331aec12, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6547361944441021455}
   m_SourcePrefab: {fileID: 100100000, guid: 6f286cf902c82e549a6f0432331aec12, type: 3}
+--- !u!1 &2188623951393685659 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 525480073765049763, guid: 6f286cf902c82e549a6f0432331aec12, type: 3}
+  m_PrefabInstance: {fileID: 1807470348442293560}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &6547361944441021455
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2188623951393685659}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f66611f79540e0342936f1f92b33d8a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _attackRange: 2.5
+  _attackCD: 3
+  _attackDamage: 2
+  _projectilePrefab: {fileID: 6409000552057762650, guid: 2b4a3227e71a90b49b29ee52e285b8d3, type: 3}

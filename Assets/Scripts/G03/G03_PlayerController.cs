@@ -2,19 +2,23 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class G03_PlayerController : MonoBehaviour
+public class G03_PlayerController : Singleton<G03_PlayerController>
 {
     [SerializeField] private float _moveSpeed = 2f;
     [SerializeField] private bool _isGridMovement = false;
+    private G03_BombLauncher _bombLauncher;
     private Vector3 _newPos = Vector3.zero;
     private bool _isMoving = false;
-
     private float _xMin;
     private float _xMax;
     private float _yMin;
     private float _yMax;
 
-    private void Awake() {
+    public Vector3 GetPlayerPos { get { return this.transform.position; } }
+
+    protected override void Awake() {
+        base.Awake();
+        _bombLauncher = GetComponent<G03_BombLauncher>();
         _newPos = this.transform.position;
     }
 
@@ -33,6 +37,10 @@ public class G03_PlayerController : MonoBehaviour
                 MoveGridInput();
             }
             MoveGrid();
+        }
+
+        if (Input.GetKeyDown(KeyCode.Space)) {
+            _bombLauncher.LaunchBomb();
         }
     }
 

@@ -7,11 +7,12 @@ using UnityEngine;
 
 public class G03_NPC : MonoBehaviour, G03_IDamageable
 {
-    public static Action<GameObject> OnStatusChange;
+    public static Action<G03_NPC> OnStatusChange;
     public static Action<NpcStatus, int> OnDamageTaken;
     public static Action<NpcStatus> OnDeath;
 
     [SerializeField] private NpcStatus _currentNpcStatus = NpcStatus.Hostile;
+    [SerializeField] private NpcState _currentNpcState = NpcState.None;
     [SerializeField] private int _startHP = 1;
     [SerializeField] private float _moveSpeed = 1f;
     [SerializeField] private float _startMoveDirCD = 3f;
@@ -23,20 +24,19 @@ public class G03_NPC : MonoBehaviour, G03_IDamageable
     public int GetCurrentHP { get { return _currentHP; } }
     public float GetMoveSpeed { get { return _moveSpeed; } }
     public int GetStartAttackCD { get { return _currentHP; } }
+    public G03_Objective CurrentGoalObjective { get; set; }
+    public G03_Objective BaseObjective { get; set; }
     private bool _isFeared = false;
     private SpriteRenderer _spriteRenderer;
     private Collider2D _myCollider;
-    private NpcState _currentNpcState = NpcState.None;
     private int _currentHP = 0;
-    private Transform _currentTarget = null;
+    private Collider2D _currentTargetCollider = null;
     private Vector2 _currentMoveDir = Vector2.zero;
     private float _currentMoveDirCD = 0f;
     private float _attackRange = 0f;
     private float _startAttackCD = 0f;
     private float _currentAttackCD = 0f;
-    private bool _hasOrder = false;
-    private Vector3 _currentOrderPos = Vector2.zero;
-
+    
     private float _xMin;
     private float _xMax;
     private float _yMin;
@@ -75,16 +75,27 @@ public class G03_NPC : MonoBehaviour, G03_IDamageable
 
     private void OnEnable() {
         G03_NPC.OnStatusChange += G03_NPC_OnStatusChange;    
+        G03_Objective.OnDeath += G03_Objective_OnDeath;
     }
 
     private void OnDisable() {
         G03_NPC.OnStatusChange -= G03_NPC_OnStatusChange;            
+        G03_Objective.OnDeath -= G03_Objective_OnDeath;
     }
 
+    private void G03_NPC_OnStatusChange(G03_NPC sender) {
+        if (_currentTargetCollider != null && sender.gameObject == _currentTargetCollider.gameObject) {
+            _currentTargetCollider = null;
+        }
+    }
 
-    private void G03_NPC_OnStatusChange(GameObject sender) {
-        if (_currentTarget != null && sender.gameObject == _currentTarget.gameObject) {
-            _currentTarget = null;
+    private void G03_Objective_OnDeath(G03_Objective sender) {
+        if (_currentTargetCollider != null && sender.gameObject == _currentTargetCollider.gameObject) {
+            _currentTargetCollider = null;
+        }
+
+        if (sender == CurrentGoalObjective) {
+            CurrentGoalObjective = BaseObjective;
         }
     }
 
@@ -118,10 +129,8 @@ public class G03_NPC : MonoBehaviour, G03_IDamageable
         _currentNpcStatus = newNpcStatus;
         _npcAttack.AttackType = newNpcStatus;
 
-        if (newNpcStatus == NpcStatus.Friendly) {
-            UpdateHP(_startHP); // reset HP when revived
-            _hasOrder = false;
-            _myCollider.enabled = false; // disable collider if using dynamic physics; G03 only
+        if (newNpcStatus == NpcStatus.Corpse) {
+            _myCollider.enabled = false; // disable collider; G03 only
         }
         
         _spriteRenderer.color = newNpcStatus switch {
@@ -131,24 +140,30 @@ public class G03_NPC : MonoBehaviour, G03_IDamageable
             _ => _spriteRenderer.color
         };
  
-        _currentTarget = GetClosestTargetInRange();
+        _currentTargetCollider = GetClosestTargetInRange();
 
-        OnStatusChange?.Invoke(this.gameObject);
+        OnStatusChange?.Invoke(this);
     }
 
-    private Transform GetClosestTargetInRange() {
-        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, _targetScanRadius);
-        var sortedHits = hits.OrderBy(hit => Vector2.Distance(transform.position, hit.transform.position));
+    private Collider2D GetClosestTargetInRange() {
+        Collider2D[] hits = Physics2D.OverlapCircleAll(this.transform.position, _targetScanRadius);
+        var sortedHits = hits.OrderBy(hit => Vector2.Distance(this.transform.position, hit.transform.position));
 
         foreach (var hit in sortedHits) {
             G03_NPC npc = hit.GetComponent<G03_NPC>();
 
-            if (_currentNpcStatus == NpcStatus.Hostile && npc != null && npc.CurrentNpcStatus == NpcStatus.Friendly) {
-                return hit.transform;
-            }
+            if (npc != null && _currentNpcStatus == NpcStatus.Hostile && npc.CurrentNpcStatus == NpcStatus.Friendly) {
+                return hit.GetComponent<Collider2D>();
+            } else if (npc != null && _currentNpcStatus == NpcStatus.Friendly && npc.CurrentNpcStatus == NpcStatus.Hostile) {
+                return hit.GetComponent<Collider2D>();
+            } else {
+                G03_Objective objective = hit.GetComponent<G03_Objective>();
 
-            if (_currentNpcStatus == NpcStatus.Friendly && npc != null && npc.CurrentNpcStatus == NpcStatus.Hostile) {
-                return hit.transform;
+                if (objective != null && _currentNpcStatus == NpcStatus.Hostile && objective.GetObjectiveType == G03_Objective.ObjectiveType.Friendly) {
+                    return hit.GetComponent<Collider2D>();
+                } else if (objective != null && _currentNpcStatus == NpcStatus.Friendly && objective.GetObjectiveType == G03_Objective.ObjectiveType.Hostile) {
+                    return hit.GetComponent<Collider2D>();
+                }
             }
         }
 
@@ -156,51 +171,39 @@ public class G03_NPC : MonoBehaviour, G03_IDamageable
     }
 
     private void NpcStateTransition() {
-        if (_currentTarget == null) {
+        if (_currentTargetCollider == null) {
             if (_currentNpcState != NpcState.Roaming && (CurrentNpcStatus == NpcStatus.Hostile || CurrentNpcStatus == NpcStatus.Friendly)) {
                 _currentNpcState = NpcState.Roaming;
             }
             return;
         }
 
-        float targetDistance = Vector3.Distance(_currentTarget.position, this.transform.position);
+        Vector3 targetClosestPoint = _currentTargetCollider.ClosestPoint(this.transform.position);
+        float targetDistance = Vector3.Distance(targetClosestPoint, this.transform.position);
 
         if (_currentNpcStatus != NpcStatus.None) {
             if (_currentNpcStatus == NpcStatus.Corpse && _currentNpcState != NpcState.None) {
                 //Debug.Log("Switching to none state");
                 _currentNpcState = NpcState.None;
-                _hasOrder = false;
             } else if (_currentNpcState != NpcState.Roaming && targetDistance > _chaseRange) {
                 //Debug.Log("Switching to roaming state");
                 _currentNpcState = NpcState.Roaming;
-                _currentTarget = GetClosestTargetInRange();
+                _currentTargetCollider = GetClosestTargetInRange();
             } else if (_currentNpcState != NpcState.Chasing && targetDistance > _attackRange && targetDistance <= _chaseRange) {
                 //Debug.Log("Switching to chasing state");
                 _currentNpcState = NpcState.Chasing;
-                _hasOrder = false;
-                _currentTarget = GetClosestTargetInRange();
+                _currentTargetCollider = GetClosestTargetInRange();
             } else if (_currentNpcState != NpcState.Attacking && targetDistance <= _attackRange) {
                //Debug.Log("Switching to attacking state");
                 _currentNpcState = NpcState.Attacking;
-                _hasOrder = false;
-                _currentTarget = GetClosestTargetInRange();
+                _currentTargetCollider = GetClosestTargetInRange();
             }
         }
     }
 
     private void Roam() {
-        _currentTarget = GetClosestTargetInRange();
-
-        if (_hasOrder && CurrentNpcStatus == NpcStatus.Friendly) {
-            MoveToOrder();
-        } else {
-            var deltaX = _currentMoveDir.x * Time.deltaTime * _moveSpeed;
-            var deltaY = _currentMoveDir.y * Time.deltaTime * _moveSpeed;
-
-            var newXPos = Mathf.Clamp(transform.position.x + deltaX, _xMin, _xMax);
-            var newYPos = Mathf.Clamp(transform.position.y + deltaY, _yMin, _yMax);
-            transform.position = new Vector2(newXPos, newYPos);
-        }
+        _currentTargetCollider = GetClosestTargetInRange();
+        MoveToCurrentObjective();
     }
 
     private Vector2 GetRandomMoveDir() {
@@ -208,11 +211,11 @@ public class G03_NPC : MonoBehaviour, G03_IDamageable
     }
 
     private void Chase() {
-        if (_currentTarget == null) {
+        if (_currentTargetCollider == null) {
             return;
         }
 
-        Vector2 dir = (_currentTarget.position - this.transform.position).normalized;
+        Vector2 dir = (_currentTargetCollider.transform.position - this.transform.position).normalized;
         float deltaX = dir.x * Time.deltaTime * _moveSpeed;
         float deltaY = dir.y * Time.deltaTime * _moveSpeed;
 
@@ -220,46 +223,46 @@ public class G03_NPC : MonoBehaviour, G03_IDamageable
     }
 
     protected virtual void Attack() {
-        if (_currentTarget == null) {
+        if (_currentTargetCollider == null) {
             return;
         }
 
         if (_currentAttackCD <= 0f) {
-            _npcAttack.UseAttack(_currentTarget.position);
+            _npcAttack.UseAttack(_currentTargetCollider.transform.position);
             //Debug.Log("Using attack");
             _currentAttackCD = _startAttackCD;
         }
     }
 
     public bool TakeDamage(NpcStatus damageType, int damageAmount) {
-        Debug.Log("Take damage entered.");
-        Debug.Log(CurrentNpcStatus.ToString() + " " + damageType.ToString());
+        //Debug.Log("Take damage entered.");
+        //Debug.Log(CurrentNpcStatus.ToString() + " " + damageType.ToString());
+
+        bool damageTaken = false;
+
         if (CurrentNpcStatus == NpcStatus.Hostile && damageType == NpcStatus.Friendly) {
             UpdateHP(_currentHP - damageAmount);
             OnDamageTaken?.Invoke(CurrentNpcStatus, damageAmount);
+            damageTaken = true;
 
-            if (_currentHP <= 0) {
-            Debug.Log("Hostile NPC died; updating to corpse");
-            OnDeath?.Invoke(CurrentNpcStatus);
-            UpdateNpcStatus(NpcStatus.Corpse);
-            }
-            return true;
         } else if (CurrentNpcStatus == NpcStatus.Friendly && damageType == NpcStatus.Hostile) {
             UpdateHP(_currentHP - damageAmount);
             OnDamageTaken?.Invoke(CurrentNpcStatus, damageAmount);
-            
-            if (_currentHP <= 0) {
-            Debug.Log("Friendly NPC died; destroying object");
-            OnDeath?.Invoke(CurrentNpcStatus);
-            Destroy(this.gameObject);
-            }
-            return true;
+            damageTaken = true;
         }
-        return false;
+
+        if (_currentHP <= 0) {
+        //Debug.Log("NPC died; updating to corpse");
+        OnDeath?.Invoke(CurrentNpcStatus);
+        UpdateNpcStatus(NpcStatus.Corpse);
+        //Destroy(this.gameObject);
+        }
+
+        return damageTaken;
     }
 
     public void UpdateHP(int newHP) {
-        Debug.Log("Update HP called");
+       // Debug.Log("Update HP called");
         _currentHP = newHP;
         _textHP.text = newHP.ToString();
     }
@@ -287,12 +290,9 @@ public class G03_NPC : MonoBehaviour, G03_IDamageable
         _moveSpeed = moveSpeed;
     }
 
-    private void MoveToOrder() {
-        if (this.transform.position != _currentOrderPos) {
-            Debug.Log("move to order entered");
-            this.transform.position = Vector3.MoveTowards(this.transform.position, _currentOrderPos, _moveSpeed * Time.deltaTime);
-        } else {
-            _hasOrder = false;
-        }      
+    private void MoveToCurrentObjective() {
+        if (CurrentGoalObjective != null && this.transform.position != CurrentGoalObjective.transform.position) {
+            this.transform.position = Vector3.MoveTowards(this.transform.position, CurrentGoalObjective.transform.position, _moveSpeed * Time.deltaTime);
+        }
     }
 }
