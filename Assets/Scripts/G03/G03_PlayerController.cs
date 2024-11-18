@@ -39,6 +39,12 @@ public class G03_PlayerController : Singleton<G03_PlayerController>
             MoveGrid();
         }
 
+        if (Input.GetKeyDown(KeyCode.Q)) {
+            _bombLauncher.RedistributeCharge(true);
+        }
+        if (Input.GetKeyDown(KeyCode.E)) {
+            _bombLauncher.RedistributeCharge(false);
+        }
         if (Input.GetKeyDown(KeyCode.Space)) {
             _bombLauncher.LaunchBomb();
         }

@@ -11,7 +11,7 @@ public class G03_NpcRangedAttack : G03_NpcAttack
         float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
         Quaternion rotation = Quaternion.Euler(0, 0, angle);
 
-        Debug.Log("Spawning projectile");
+        //Debug.Log("Spawning projectile");
 
         var newProjectile = Instantiate(_projectilePrefab, this.transform.position, rotation).GetComponent<G03_Projectile>();
         newProjectile.DamageType = AttackType;

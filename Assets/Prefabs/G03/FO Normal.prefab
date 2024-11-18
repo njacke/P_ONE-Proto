@@ -64,6 +64,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: FO Normal
       objectReference: {fileID: 0}
+    - target: {fileID: 8332500053678138967, guid: a88deb3f8a4b4d3408e255df41349f78, type: 3}
+      propertyPath: _startHP
+      value: 20
+      objectReference: {fileID: 0}
+    - target: {fileID: 8332500053678138967, guid: a88deb3f8a4b4d3408e255df41349f78, type: 3}
+      propertyPath: _currentHP
+      value: 20
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

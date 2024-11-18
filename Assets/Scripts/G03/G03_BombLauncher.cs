@@ -1,13 +1,19 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class G03_BombLauncher : MonoBehaviour
 {
-    [SerializeField] private int _maxCharges = 6;
+    public static Action<string> OnBombCreated;
+    public static Action OnBombLaunched;
+    public static Action<int, int, int> OnChargeChange;
+
+    [SerializeField] private int _maxCharges = 4;
     [SerializeField] private float _startChargeCd = 2f;
     [SerializeField] private float _createBombDelay = 1f;
-    [SerializeField] GameObject _bombPrefab;
+    [SerializeField] private GameObject _bombPrefab;
+    [SerializeField] private GameObject[] _bombEffects;
 
     private G03_Bomb _currentBomb = null;
     private Coroutine _createNewBombRoutine = null;
@@ -17,7 +23,11 @@ public class G03_BombLauncher : MonoBehaviour
     private float _currentChargeCd = 0f;
 
     private void Awake() {
-        _currentBomb = CreateNewBomb();
+        _currentChargeCd = _startChargeCd;
+    }
+
+    private void Start() {
+        CreateNewBomb();
     }
 
     private void Update() {
@@ -40,21 +50,37 @@ public class G03_BombLauncher : MonoBehaviour
                 }
                 _totalCharges++;
                 _currentChargeCd = _startChargeCd;
-                Debug.Log("Charge added; total charges: " + _totalCharges.ToString());
+                OnChargeChange?.Invoke(_topCharges, _botCharges, _maxCharges);
+                //Debug.Log("Charge added; total charges: " + _totalCharges.ToString());
             }
         }
     }
 
-    private G03_Bomb CreateNewBomb() {
-        var newBomb = Instantiate(_bombPrefab, transform.position, Quaternion.identity).GetComponent<G03_Bomb>();
-        return newBomb;
+    private void CreateNewBomb() {
+        _currentBomb = Instantiate(_bombPrefab, transform.position, Quaternion.identity).GetComponent<G03_Bomb>();
+        var rndEffectIndex = UnityEngine.Random.Range(0, _bombEffects.Length);
+        var newBombEffect = Instantiate(_bombEffects[rndEffectIndex], this.transform.position, Quaternion.identity).GetComponent<G03_BombEffect>();
+        newBombEffect.transform.SetParent(_currentBomb.transform);
+        _currentBomb.SetEffect(newBombEffect);
+        OnBombCreated?.Invoke(newBombEffect.GetEffectName);
     }
 
     private IEnumerator CreateNewBombRoutine() {
-        Debug.Log("Create new bomb routine started.");
+        //Debug.Log("Create new bomb routine started.");
         yield return new WaitForSeconds(_createBombDelay);
-        _currentBomb = CreateNewBomb();
+        CreateNewBomb();
         _createNewBombRoutine = null;
+    }
+
+    public void RedistributeCharge(bool addTop) {
+        if (addTop && _topCharges < _totalCharges) {
+            _botCharges--;
+            _topCharges ++;
+        } else if (_botCharges < _totalCharges) {
+            _topCharges--;
+            _botCharges++;
+        }
+        OnChargeChange?.Invoke(_topCharges, _botCharges, _maxCharges);
     }
 
     public void LaunchBomb() {
@@ -64,10 +90,11 @@ public class G03_BombLauncher : MonoBehaviour
             _topCharges = 0;
             _botCharges = 0;
             _currentChargeCd = _startChargeCd;
+            OnChargeChange?.Invoke(_topCharges, _botCharges, _maxCharges);
 
             _currentBomb.ActivateBomb();
-
             _currentBomb = null;
+            OnBombLaunched?.Invoke();
         }
     }
 }

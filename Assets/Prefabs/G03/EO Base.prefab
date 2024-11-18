@@ -77,6 +77,14 @@ PrefabInstance:
       value: EO Base
       objectReference: {fileID: 0}
     - target: {fileID: 8332500053678138967, guid: 02cae9481ce797f408d3e929d171beea, type: 3}
+      propertyPath: _startHP
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 8332500053678138967, guid: 02cae9481ce797f408d3e929d171beea, type: 3}
+      propertyPath: _currentHP
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 8332500053678138967, guid: 02cae9481ce797f408d3e929d171beea, type: 3}
       propertyPath: _objectiveType
       value: 1
       objectReference: {fileID: 0}

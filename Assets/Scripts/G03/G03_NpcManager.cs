@@ -5,16 +5,19 @@ using UnityEngine;
 
 public class G03_NpcManager : Singleton<G03_NpcManager>
 {
-    [SerializeField] private float _startSpawnCd = 1f;
+    [SerializeField] private float _friendlyStartSpawnCd = 1f;
+    [SerializeField] private float _hostileStartSpawnCd = .75f;
     [SerializeField] private G03_NPC[] _npcPrefabs;
     [SerializeField] Transform[] _hostileSpawnPoints;
     [SerializeField] Transform[] _friendlySpawnPoints;
     private Dictionary<G03_Objective, Vector3> _objectiveSpawnPointMap = new();
-    private float _currentSpawnCd;
+    private float _currentFriendlySpawnCd;
+    private float _currentHostileSpawnCd;
 
     protected override void Awake() {
         base.Awake();
-        _currentSpawnCd = _startSpawnCd;        
+        _currentFriendlySpawnCd = _friendlyStartSpawnCd;        
+        _currentHostileSpawnCd = _hostileStartSpawnCd;        
     }
 
     private void Start() {
@@ -22,12 +25,19 @@ public class G03_NpcManager : Singleton<G03_NpcManager>
     }
 
     private void Update() {
-        _currentSpawnCd -= Time.deltaTime;
-        if (_currentSpawnCd <= 0f) {
-            SpawnNpc(G03_NPC.NpcStatus.Hostile);
+        _currentFriendlySpawnCd -= Time.deltaTime;
+        _currentHostileSpawnCd -= Time.deltaTime;
+
+        if (_currentFriendlySpawnCd <= 0f) {
             SpawnNpc(G03_NPC.NpcStatus.Friendly);
-            _currentSpawnCd = _startSpawnCd;
+            _currentFriendlySpawnCd = _friendlyStartSpawnCd;
         }
+
+        if (_currentHostileSpawnCd <= 0f) {
+            SpawnNpc(G03_NPC.NpcStatus.Hostile);
+            _currentHostileSpawnCd = _hostileStartSpawnCd;
+        }
+
     }
 
     private void SpawnNpc(G03_NPC.NpcStatus npcStatus) {

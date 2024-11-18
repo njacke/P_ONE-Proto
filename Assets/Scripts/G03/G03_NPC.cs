@@ -14,7 +14,7 @@ public class G03_NPC : MonoBehaviour, G03_IDamageable
     [SerializeField] private NpcStatus _currentNpcStatus = NpcStatus.Hostile;
     [SerializeField] private NpcState _currentNpcState = NpcState.None;
     [SerializeField] private int _startHP = 1;
-    [SerializeField] private float _moveSpeed = 1f;
+    [SerializeField] private float _startMoveSpeed = 1f;
     [SerializeField] private float _startMoveDirCD = 3f;
     [SerializeField] private float _chaseRange = 3f;
     [SerializeField] private float _targetScanRadius = 10f;
@@ -22,10 +22,13 @@ public class G03_NPC : MonoBehaviour, G03_IDamageable
     [SerializeField] private TextMeshPro _textHP;
     public NpcStatus CurrentNpcStatus { get { return _currentNpcStatus; } set { UpdateNpcStatus(value); } }
     public int GetCurrentHP { get { return _currentHP; } }
-    public float GetMoveSpeed { get { return _moveSpeed; } }
+    public float GetStartMoveSpeed { get { return _startMoveSpeed; } }
     public int GetStartAttackCD { get { return _currentHP; } }
     public G03_Objective CurrentGoalObjective { get; set; }
     public G03_Objective BaseObjective { get; set; }
+    public G03_NpcAttack GetNpcAttack { get { return _npcAttack ; } }
+
+    private float _currentMoveSpeed;
     private bool _isFeared = false;
     private SpriteRenderer _spriteRenderer;
     private Collider2D _myCollider;
@@ -59,6 +62,7 @@ public class G03_NPC : MonoBehaviour, G03_IDamageable
     private void Awake() {
         _spriteRenderer = GetComponent<SpriteRenderer>();
         _myCollider = GetComponent<Collider2D>();
+        _currentMoveSpeed = _startMoveSpeed;
         UpdateHP(_startHP);
         _attackRange = _npcAttack.GetAttackRange;
         _startAttackCD = _npcAttack.GetAttackCD;
@@ -216,8 +220,8 @@ public class G03_NPC : MonoBehaviour, G03_IDamageable
         }
 
         Vector2 dir = (_currentTargetCollider.transform.position - this.transform.position).normalized;
-        float deltaX = dir.x * Time.deltaTime * _moveSpeed;
-        float deltaY = dir.y * Time.deltaTime * _moveSpeed;
+        float deltaX = dir.x * Time.deltaTime * _currentMoveSpeed;
+        float deltaY = dir.y * Time.deltaTime * _currentMoveSpeed;
 
         this.transform.position = new Vector2(this.transform.position.x + deltaX, this.transform.position.y + deltaY);
     }
@@ -268,14 +272,37 @@ public class G03_NPC : MonoBehaviour, G03_IDamageable
     }
 
     public void UpdateMoveSpeed(float newSpeed) {
-        _moveSpeed = newSpeed;
+        _currentMoveSpeed = newSpeed;
     }
 
-    public void UpdateAttackCD(float newAttackCD, bool resetCD) {
-        _startAttackCD = newAttackCD;
+    public void UpdateMoveSpeed(float newSpeed, float duration) {
+        StartCoroutine(UpdateSpeedRoutine(newSpeed, duration));
+    }
+
+    private IEnumerator UpdateSpeedRoutine(float newSpeed, float duration) {
+        _currentMoveSpeed = newSpeed;
+        yield return new WaitForSeconds(duration);
+        _currentMoveSpeed = _startMoveSpeed;
+    }
+
+    public void UpdateAttackCd(bool resetCD, float newAttackCd) {
+        _startAttackCD = newAttackCd;
         if (resetCD) {
             _currentAttackCD = 0f;
         }
+    }
+
+    public void UpdateAttackCd(bool resetCD, float newAttackCd, float duration) {
+        StartCoroutine(UpdateAttackCdRoutine(resetCD, newAttackCd, duration));
+    }
+
+    private IEnumerator UpdateAttackCdRoutine(bool resetCD, float newAttackCd, float duration) {
+        _startAttackCD = newAttackCd;
+        if (resetCD) {
+            _currentAttackCD = 0f;
+        }
+        yield return new WaitForSeconds(duration);
+        _startAttackCD = _npcAttack.GetAttackCD;
     }
 
     public void SetFear(bool isFeared, float moveSpeed) {
@@ -287,12 +314,12 @@ public class G03_NPC : MonoBehaviour, G03_IDamageable
             _isFeared = false;
         }
 
-        _moveSpeed = moveSpeed;
+        _currentMoveSpeed = moveSpeed;
     }
 
     private void MoveToCurrentObjective() {
         if (CurrentGoalObjective != null && this.transform.position != CurrentGoalObjective.transform.position) {
-            this.transform.position = Vector3.MoveTowards(this.transform.position, CurrentGoalObjective.transform.position, _moveSpeed * Time.deltaTime);
+            this.transform.position = Vector3.MoveTowards(this.transform.position, CurrentGoalObjective.transform.position, _currentMoveSpeed * Time.deltaTime);
         }
     }
 }
