@@ -20,11 +20,24 @@ public class MainMenuUI : MonoBehaviour
         Application.Quit();
     }
 
-    public void LoadG01OnClick() {
-        SceneManager.LoadScene("G01");
+    public void LoadG01V1OnClick() {
+        SceneManager.LoadScene("G01_1");
+    }
+
+    public void LoadG01V2OnClick() {
+        SceneManager.LoadScene("G01_2");
+    }
+
+    public void LoadG01V3OnClick() {
+        SceneManager.LoadScene("G01_3");
     }
 
     public void LoadG02OnClick() {
         SceneManager.LoadScene("G02");
+
+    }
+
+    public void LoadG03OnClick() {
+        SceneManager.LoadScene("G03");
     }
 }

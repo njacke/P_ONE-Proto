@@ -44,9 +44,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0dbb8cae51358dd4a88a0a6e1030ee7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _effectName: Attack buff
+  _effectName: Attack Buff
   _isOneTime: 1
   _effectLifetime: 0.2
   _effectColor: {r: 0.8356112, g: 0.8396226, b: 0.29703632, a: 1}
   _attackBuff: 1.25
   _powerFactor: 0.25
+  _buffDuration: 5

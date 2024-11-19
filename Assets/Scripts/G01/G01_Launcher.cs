@@ -5,7 +5,6 @@ using UnityEngine;
 public class G01_Launcher : MonoBehaviour
 {
     [SerializeField] GameObject _entityPrefab;
-    [SerializeField] private float _startSpawnCD = 3f;
     [SerializeField] private float _startDirChangeCD = .2f;
     [SerializeField] private int _maxDirRetryCount = 100;
 
@@ -15,41 +14,70 @@ public class G01_Launcher : MonoBehaviour
     private G01_Projectile _currentProjectile;
 
     private void Awake() {
-        _currentSpawnCD = _startSpawnCD;
         _currentDirChangeCD = _startDirChangeCD;
     }
 
     private void Start() {
-        SpawnProjectile();
+        _currentSpawnCD = G01_GameManager.Instance.GetCurrentProjectileSpawnCd;
+
+        if (G01_GameManager.Instance.GetGameVersion == G01_GameManager.GameVersion.RandomLauncher) {
+            SpawnProjectileRnd();
+        } else if (G01_GameManager.Instance.GetGameVersion == G01_GameManager.GameVersion.LockInLauncher) {
+            SpawnProjectileLock();
+        } else if (G01_GameManager.Instance.GetGameVersion == G01_GameManager.GameVersion.DirectionalLauncher) {
+            SpawnProjectileDir();
+        }
     }
     
     private void Update() {
-        if (_currentProjectile == null) {
+        if (G01_GameManager.Instance.GetGameVersion == G01_GameManager.GameVersion.RandomLauncher) {
             _currentSpawnCD -= Time.deltaTime;
             if (_currentSpawnCD <= 0f) {
-                SpawnProjectile();
-                //SpawnProjectileOld();
+                SpawnProjectileRnd();
+            }            
+        } else if (G01_GameManager.Instance.GetGameVersion == G01_GameManager.GameVersion.LockInLauncher) {
+            if (_currentProjectile == null) {
+                _currentSpawnCD -= Time.deltaTime;
+                if (_currentSpawnCD <= 0f) {
+                    SpawnProjectileLock();
+                }
+            } else {
+                _currentDirChangeCD -= Time.deltaTime;
+                if (_currentDirChangeCD <= 0f) {
+                    _currentProjectile.SetDirection = GetNewDirection();
+                    _currentDirChangeCD = _startDirChangeCD;
+                }
             }
-        } else {
-            _currentDirChangeCD -= Time.deltaTime;
-            if (_currentDirChangeCD <= 0f) {
-                _currentProjectile.SetDirection = GetNewDirection();
-                _currentDirChangeCD = _startDirChangeCD;
+        } else if (G01_GameManager.Instance.GetGameVersion == G01_GameManager.GameVersion.DirectionalLauncher) {
+            if (_currentProjectile == null) {
+                _currentSpawnCD -= Time.deltaTime;
+                if (_currentSpawnCD <= 0f) {
+                    SpawnProjectileDir();
+                }
             }
         }
+
+        //Debug.Log("Current Spawn Cooldown: " + _currentSpawnCD);
     }
 
-    private void SpawnProjectile() {
+    private void SpawnProjectileRnd() {
+        _currentProjectile = Instantiate(_entityPrefab, this.transform.position, Quaternion.identity).GetComponent<G01_Projectile>();
+        _currentProjectile.SetDirection = GetNewDirection();
+        _currentSpawnCD = G01_GameManager.Instance.GetCurrentProjectileSpawnCd;
+    }
+
+    private void SpawnProjectileLock() {
         _currentProjectile = Instantiate(_entityPrefab, this.transform.position, Quaternion.identity).GetComponent<G01_Projectile>();
         _currentProjectile.SetDirection = GetNewDirection();        
-        _currentSpawnCD = _startSpawnCD;
+        _currentSpawnCD = G01_GameManager.Instance.GetCurrentProjectileSpawnCd;
         _currentDirChangeCD = _startDirChangeCD;
     }
 
-    private void SpawnProjectileOld() {
-        var newProjectile = Instantiate(_entityPrefab, this.transform.position, Quaternion.identity).GetComponent<G01_Projectile>();
-        newProjectile.SetDirection = GetNewDirection();
-        _currentSpawnCD = _startSpawnCD;
+
+    private void SpawnProjectileDir() {
+        _currentProjectile = Instantiate(_entityPrefab, this.transform.position, Quaternion.identity).GetComponent<G01_Projectile>();
+        _currentProjectile.SetDirection = GetNewDirection();
+        _currentSpawnCD = G01_GameManager.Instance.GetCurrentProjectileSpawnCd;        
     }
 
     private Vector2 GetNewDirection() {
@@ -72,11 +100,39 @@ public class G01_Launcher : MonoBehaviour
 
         return dir;
     }
+
     public void FireProjectile() {
         if (_currentProjectile != null) {
             _currentProjectile.EnableMovement();
             _currentProjectile = null;
-            _currentSpawnCD = _startSpawnCD;
+            _currentSpawnCD = G01_GameManager.Instance.GetCurrentProjectileSpawnCd;
         }
+    }
+
+    public void SetProjectileDir(int dirIndex) {
+        if (_currentProjectile == null) {
+            return;
+        }
+
+        var dir = Vector2.zero;
+        switch (dirIndex) {
+            case 0:
+                dir = new Vector2(-1, 1);
+                break;
+            case 1:
+                dir = new Vector2(1, 1);
+                break;
+            case 2:
+                dir = new Vector2(1, -1);
+                break;
+            case 3:
+                dir = new Vector2(-1, -1);
+                break;
+            default:
+                break;
+        }
+
+        _currentProjectile.SetDirection = dir;
+        _lastDirection = dir;
     }
 }

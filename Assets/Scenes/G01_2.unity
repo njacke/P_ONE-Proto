@@ -1632,6 +1632,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d69283145bb3c22499f02d7fb0de0473, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _gameVersion: 2
   _startHP: 10
   _startProjectileSpeed: 0.4
   _startProjectileDelay: 1

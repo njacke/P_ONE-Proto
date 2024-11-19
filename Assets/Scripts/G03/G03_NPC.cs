@@ -20,6 +20,7 @@ public class G03_NPC : MonoBehaviour, G03_IDamageable
     [SerializeField] private float _targetScanRadius = 10f;
     [SerializeField] private G03_NpcAttack _npcAttack;
     [SerializeField] private TextMeshPro _textHP;
+    [SerializeField] private int _corpseLayerOrder = -2;
     public NpcStatus CurrentNpcStatus { get { return _currentNpcStatus; } set { UpdateNpcStatus(value); } }
     public int GetCurrentHP { get { return _currentHP; } }
     public float GetStartMoveSpeed { get { return _startMoveSpeed; } }
@@ -135,6 +136,7 @@ public class G03_NPC : MonoBehaviour, G03_IDamageable
 
         if (newNpcStatus == NpcStatus.Corpse) {
             _myCollider.enabled = false; // disable collider; G03 only
+            _spriteRenderer.sortingOrder = _corpseLayerOrder;
         }
         
         _spriteRenderer.color = newNpcStatus switch {

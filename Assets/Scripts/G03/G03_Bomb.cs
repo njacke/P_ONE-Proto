@@ -13,10 +13,10 @@ public class G03_Bomb : MonoBehaviour
     private bool _hasActivated = false;
     private Dictionary<int, float> _chargesScaleDisct = new() {
         { 0, 1f },
-        { 1, 1.25f },
-        { 2, 1.5f },
-        { 3, 1.75f },
-        { 4, 2f },
+        { 1, 1.4f },
+        { 2, 1.8f },
+        { 3, 2.2f },
+        { 4, 2.6f },
     };
 
     private List<G03_NPC> _affectedNpcs = new();

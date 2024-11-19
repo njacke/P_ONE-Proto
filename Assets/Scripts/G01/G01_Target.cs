@@ -23,7 +23,7 @@ public class G01_Target : G01_Entity
         _timer -= Time.deltaTime;
         _timerText.text = Mathf.Ceil(_timer).ToString("F0");
 
-        if (_timer < 0f) {
+        if (G01_GameManager.Instance.GetGameVersion != G01_GameManager.GameVersion.RandomLauncher && _timer < 0f) {
             Destroy(this.gameObject);
             OnTimerEnded?.Invoke(this.transform.position);
         }

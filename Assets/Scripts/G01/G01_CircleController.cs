@@ -9,14 +9,31 @@ public class G01_CircleController : MonoBehaviour
     [SerializeField] private G01_Launcher _launcher;
     private G01_Ring.RingType _selectedRing = G01_Ring.RingType.Shape;
 
-    private void Update()
-    {
+    private void Update() {
         //SelectionInput();
+        if (G01_GameManager.Instance.GetGameVersion == G01_GameManager.GameVersion.DirectionalLauncher) {
+            LaunchDirectionInput();
+        }
         NoSelectionInput();
     }
 
+    private void LaunchDirectionInput() {
+        if (Input.GetKey(KeyCode.Alpha1)) {
+            _launcher.SetProjectileDir(0);
+        }
+        if (Input.GetKey(KeyCode.Alpha2)) {
+            _launcher.SetProjectileDir(1);
+        }
+        if (Input.GetKey(KeyCode.Alpha3)) {
+            _launcher.SetProjectileDir(2);
+        }
+        if (Input.GetKey(KeyCode.Alpha4)) {
+            _launcher.SetProjectileDir(3);
+        }
+    }
+
     private void NoSelectionInput() {
-        if (Input.GetKeyDown(KeyCode.Space)) {
+        if (G01_GameManager.Instance.GetGameVersion != G01_GameManager.GameVersion.RandomLauncher && Input.GetKeyDown(KeyCode.Space)) {
             _launcher.FireProjectile();
         }
         if (Input.GetKey(KeyCode.Q)) {

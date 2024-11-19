@@ -18,8 +18,12 @@ public class G01_Projectile : G01_Entity
     private void Start() {
         _moveSpeed = G01_GameManager.Instance.GetProjectileSpeed;
         _moveDelay = G01_GameManager.Instance.GetCurrentProjectileDelay;
+
+        if (G01_GameManager.Instance.GetGameVersion == G01_GameManager.GameVersion.RandomLauncher) {
+            StartCoroutine(EnableMovementRoutine());
+        }
+        
         //Debug.Log("Projectile spawned with speed of: " + _moveSpeed + " and delay of: " + _moveDelay);
-        //StartCoroutine(EnableMovementRoutine());
     }
 
     private void Update() {
@@ -44,7 +48,7 @@ public class G01_Projectile : G01_Entity
         _directionIndicator.transform.rotation = Quaternion.Euler(0, 0, angle);
     }
 
-    private IEnumerator EnableMovementRoutine() {
+    public IEnumerator EnableMovementRoutine() {
         yield return new WaitForSeconds(_moveDelay);
         _isMoving = true;
         _directionIndicator.gameObject.SetActive(false);

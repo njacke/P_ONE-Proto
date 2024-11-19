@@ -64,6 +64,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: NPC Melee
       objectReference: {fileID: 0}
+    - target: {fileID: 4404147242395766533, guid: 6f286cf902c82e549a6f0432331aec12, type: 3}
+      propertyPath: m_BodyType
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4404147242395766533, guid: 6f286cf902c82e549a6f0432331aec12, type: 3}
+      propertyPath: m_GravityScale
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
