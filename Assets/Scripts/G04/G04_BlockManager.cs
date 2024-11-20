@@ -5,13 +5,19 @@ using UnityEngine;
 
 public class G04_BlockManager : MonoBehaviour
 {
+    [SerializeField] GameObject _blockPrefab;
     private bool _hasClicked = false;
     private float _singleBlockSize = 1f;
     private int _maxSelectedBlocks = 2;
     private List<G04_Block> _selectedBlocks = new();
+    private G04_Grid _storageGrid;
+
+    void Start() {
+        _storageGrid = FindObjectOfType<G04_Grid>();
+    }
 
     void Update() {
-        if(Input.GetMouseButtonDown(1) && !_hasClicked) {
+        if (Input.GetMouseButtonDown(1) && !_hasClicked) {
             RaycastHit2D hit = Physics2D.Raycast(GetMouseWorldPosition(), Vector2.zero);
             
             if(hit.collider != null){
@@ -34,7 +40,7 @@ public class G04_BlockManager : MonoBehaviour
     }
 
     public void UpdateBlockSelection(G04_Block block, bool value){
-        if(value) {
+        if (value) {
             _selectedBlocks.Add(block);
         } else {
             _selectedBlocks.Remove(block);
@@ -46,68 +52,72 @@ public class G04_BlockManager : MonoBehaviour
         if(_selectedBlocks.Count == _maxSelectedBlocks){
             if(CheckBlocksAdjacent(_selectedBlocks[0], _selectedBlocks[1])) {  
 
-                Vector3 combinedBlockSize = CalculateCombinedBlockSize();
-                Vector3 combinedBlockPosition = CalculateCombinedBlockPosition();
+                (float, float) blockSize = CalculateCombinedBlockSize();
+                Vector3 blockPos = CalculateCombinedBlockPosition();
 
-                GameObject combinedBlock = new GameObject("CombinedBlock");
-                combinedBlock.transform.position = combinedBlockPosition;
-
-                BoxCollider2D collider = combinedBlock.AddComponent<BoxCollider2D>();
-                collider.size = combinedBlockSize;
-
-                SpriteRenderer renderer = combinedBlock.AddComponent<SpriteRenderer>();
-                renderer.color = Color.white;
-
+                var newBlock = Instantiate(_blockPrefab, blockPos, Quaternion.identity);
+                newBlock.transform.localScale = new Vector3 (blockSize.Item1, blockSize.Item2, 1f);
+                
                 foreach(G04_Block block in _selectedBlocks) {
                     Destroy(block.gameObject);
                 }
 
                 _selectedBlocks.Clear();
 
-            } else{
+            } else {
                 Debug.Log("Selected blocks are not adjacent.");
             }
-        } else{
+        } else {
             Debug.Log(_maxSelectedBlocks + " need to be selected.");
         }
     }
 
     private bool CheckBlocksAdjacent(G04_Block block1, G04_Block block2) {
-        bool isAdjacent = false;
+        (int, int) block1Coor =  _storageGrid.GetBlockCellCoordinates(block1);
+        (int, int) block2Coor =  _storageGrid.GetBlockCellCoordinates(block2);
 
-        float deltaX = Math.Abs(block1.transform.position.x - block2.transform.position.x);
-        float deltaY = Math.Abs(block1.transform.position.y - block2.transform.position.y);
+        int coorDiff = block1Coor.Item1 - block2Coor.Item1 + (block1Coor.Item2 - block2Coor.Item2);
 
-        Debug.Log("deltaX is " + deltaX);
-        Debug.Log("deltaY is " + deltaY);
-
-        if(deltaX == _singleBlockSize && deltaY == 0f) {
-            isAdjacent = true;
-        } else if(deltaX == 0f && deltaY == _singleBlockSize) {
-            isAdjacent = true;
+        if (Mathf.Abs(coorDiff) > 1) {
+            return false;
         }
 
-        return isAdjacent;
+        return true;
     }
 
     private Vector3 GetMouseWorldPosition() {
-        return Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        var mousePosition = Input.mousePosition;
+        mousePosition.z = Camera.main.nearClipPlane;
+        return Camera.main.ScreenToWorldPoint(mousePosition);
     }
 
-    private Vector3 CalculateCombinedBlockSize() {
-        Vector3 combinedBlockSize = Vector3.zero;
+    private (float, float) CalculateCombinedBlockSize() {
+        float cellCount = 0;
+        (float, float) combinedSize = (0, 0);
+
         foreach (G04_Block block in _selectedBlocks) {
-            Vector2 blockColliderSize = block.GetComponent<BoxCollider2D>().size;
-            combinedBlockSize += new Vector3(blockColliderSize.x, blockColliderSize.y, 0f);
+            float cells = block.GetBlockSizeX * block.GetBlockSizeY;
+            cellCount += cells;
+        }        
+
+        if (cellCount == 2) {
+            combinedSize.Item1 = 2;
+            combinedSize.Item2 = 1;
+        } else {
+            combinedSize.Item1 = cellCount / 2;
+            combinedSize.Item2 = cellCount / 2;
         }
-        return combinedBlockSize;
+
+        return combinedSize;
     }
 
     private Vector3 CalculateCombinedBlockPosition() {
         Vector3 combinedBlockPosition = Vector3.zero;
+
         foreach (G04_Block block in _selectedBlocks) {
             combinedBlockPosition += block.transform.position;
         }
+
         combinedBlockPosition /= _selectedBlocks.Count;
         return combinedBlockPosition;
     }

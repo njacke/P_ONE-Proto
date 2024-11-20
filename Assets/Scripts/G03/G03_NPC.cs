@@ -137,6 +137,7 @@ public class G03_NPC : MonoBehaviour, G03_IDamageable
         if (newNpcStatus == NpcStatus.Corpse) {
             _myCollider.enabled = false; // disable collider; G03 only
             _spriteRenderer.sortingOrder = _corpseLayerOrder;
+            //Destroy(this.gameObject);
         }
         
         _spriteRenderer.color = newNpcStatus switch {
