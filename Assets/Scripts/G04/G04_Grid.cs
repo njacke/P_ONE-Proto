@@ -9,21 +9,24 @@ public class G04_Grid : MonoBehaviour
     public float GetGridMaxX { get { return _gridMaxX; } }
     public float GetGridMinY { get { return _gridMinY; } }
     public float GetGridMaxY { get { return _gridMaxY; } }
+    public float GetCellSize { get { return _cellSize; } }
 
     [SerializeField] private int _gridSizeX = 4;
     [SerializeField] private int _gridSizeY = 4;
     [SerializeField] private float _cellSize = 1f;
 
-    private Vector2[,] _gridCellsPos;
-    private G04_Block[,] _gridCellsBlocks;
+    private Vector2[,] _gridWorldPos;
+    private G04_Block[,] _gridBlocks;
+    private G04_CombinedBlock[,] _gridCombinedBlocks;
     private float _gridMinX;
     private float _gridMaxX;
     private float _gridMinY;
     private float _gridMaxY;
 
     private void Awake() {
-        _gridCellsPos = new Vector2[_gridSizeX, _gridSizeY];
-        _gridCellsBlocks = new G04_Block[_gridSizeX, _gridSizeY];
+        _gridWorldPos = new Vector2[_gridSizeX, _gridSizeY];
+        _gridBlocks = new G04_Block[_gridSizeX, _gridSizeY];
+        _gridCombinedBlocks = new G04_CombinedBlock[_gridSizeX, _gridSizeY];
 
         _gridMinX = 0f - _gridSizeX / 2f;
         _gridMaxX = 0f + _gridSizeX / 2f;
@@ -39,30 +42,30 @@ public class G04_Grid : MonoBehaviour
         for (int i = 0; i < _gridSizeX; i++) {
             var currentX = startPosX;
             for (int j = 0; j < _gridSizeY; j++) {
-                _gridCellsPos[i, j] = new Vector2(currentX, currentY);
+                _gridWorldPos[i, j] = new Vector2(currentX, currentY);
                 currentX += _cellSize;
             }
             currentY -= _cellSize;
         }
     }
 
-    public bool IsPositionTaken(Vector2 pos) {
-        var closestCell = GetClosestCellCoordinates(pos);
-        if (_gridCellsBlocks[closestCell.Item1, closestCell.Item2] != null) {
-            Debug.Log("position taken");
+    public bool IsPosTaken(Vector2 pos) {
+        var closestCell = GetClosestCellCoor(pos);
+        if (_gridBlocks[closestCell.Item1, closestCell.Item2] != null) {
+            //Debug.Log("position taken");
             return true;
         }
-        Debug.Log("position not taken.");
+        //Debug.Log("position not taken.");
         return false;
     }
 
-    public (int, int) GetClosestCellCoordinates(Vector2 pos) {
+    public (int, int) GetClosestCellCoor(Vector2 pos) {
         float closestDistance = float.MaxValue;
         (int, int) closestCell = (-1, -1);
 
-        for (int i = 0; i < _gridCellsPos.GetLength(0); i++) {
-            for (int j = 0; j < _gridCellsPos.GetLength(1); j++) {
-                float distance = Vector2.Distance(_gridCellsPos[i, j], pos);
+        for (int i = 0; i < _gridWorldPos.GetLength(0); i++) {
+            for (int j = 0; j < _gridWorldPos.GetLength(1); j++) {
+                float distance = Vector2.Distance(_gridWorldPos[i, j], pos);
 
                 if (distance < closestDistance) {
                     closestDistance = distance;
@@ -75,14 +78,34 @@ public class G04_Grid : MonoBehaviour
     }
 
     public Vector2 GetClosestCellPos(Vector2 pos) {
-        (int, int) closestCell = GetClosestCellCoordinates(pos);
-        Vector2 closestPos = _gridCellsPos[closestCell.Item1, closestCell.Item2];
+        (int, int) closestCell = GetClosestCellCoor(pos);
+        Vector2 closestPos = _gridWorldPos[closestCell.Item1, closestCell.Item2];
 
         return closestPos;
     }
 
+    public (int, int) GetBlockCoor(G04_Block block) {
+        (int, int) cellCoordinates = (-1, -1);
+
+        for (int i = 0; i < _gridWorldPos.GetLength(0); i++) {
+            for (int j = 0; j < _gridWorldPos.GetLength(1); j++) {
+                if (_gridBlocks[i, j] == block) {
+                    cellCoordinates = (i, j);
+                }
+            }
+        }
+
+        return cellCoordinates;
+    }
+
     public void UpdateCellBlockInfo(G04_Block block, (int, int) cellCoordinates) {
-        _gridCellsBlocks[cellCoordinates.Item1, cellCoordinates.Item2] = block;
+        _gridBlocks[cellCoordinates.Item1, cellCoordinates.Item2] = block;
+
+        if (block != null) {
+            _gridCombinedBlocks[cellCoordinates.Item1, cellCoordinates.Item2] = block.CombinedBlock;
+        } else {
+            _gridCombinedBlocks[cellCoordinates.Item1, cellCoordinates.Item2] = null;
+        }
     }
 
     public bool IsOnGrid(Vector3 pos){
@@ -90,20 +113,43 @@ public class G04_Grid : MonoBehaviour
             pos.y >= _gridMinY && pos.y <= _gridMaxY) {
                 return true;
             }
+
         return false;
     }
 
-    public (int, int) GetBlockCellCoordinates(G04_Block block) {
-        (int, int) cellCoordinates = (-1, -1);
+    public bool CheckCombinedBlocksAdjacent (G04_CombinedBlock combinedBlock1, G04_CombinedBlock combinedBlock2) {
+        List<(int, int)> block1coor = GetCombinedBlockCoor(combinedBlock1);
+        List<(int, int)> block2coor = GetCombinedBlockCoor(combinedBlock2);
 
-        for (int i = 0; i < _gridCellsPos.GetLength(0); i++) {
-            for (int j = 0; j < _gridCellsPos.GetLength(1); j++) {
-                if (_gridCellsBlocks[i, j] == block) {
-                    cellCoordinates = (i, j);
+        //Debug.Log("Block 1 coords count: " + block1coor.Count);
+        //Debug.Log("Block 2 coords count: " + block2coor.Count);
+
+        //Debug.Log("Coordinates block 1 " + block1coor[0].Item1.ToString() + block1coor[0].Item2.ToString());
+        //Debug.Log("Coordinates block 2 " + block2coor[0].Item1.ToString() + block2coor[0].Item2.ToString());
+
+        foreach(var coor1 in block1coor) {
+            foreach (var coor2 in block2coor) {
+                if ((Mathf.Abs(coor1.Item1 - coor2.Item1) == 1 && coor1.Item2 == coor2.Item2) ||
+                    (Mathf.Abs(coor1.Item2 - coor2.Item2) == 1 && coor1.Item1 == coor2.Item1)) {
+                    return true;
+                }
+            } 
+        }
+
+        return false;
+    }
+
+    public List<(int, int)> GetCombinedBlockCoor(G04_CombinedBlock combinedBlock) {
+        var coordsList = new List<(int, int)>();
+
+        for (int i = 0; i < _gridCombinedBlocks.GetLength(0); i++) {
+            for (int j = 0; j < _gridCombinedBlocks.GetLength(1); j++) {
+                if (_gridCombinedBlocks[i, j] == combinedBlock) {
+                    coordsList.Add((i, j));
                 }
             }
         }
 
-        return cellCoordinates;
+        return coordsList;
     }
 }
