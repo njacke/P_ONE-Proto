@@ -2,87 +2,70 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
+using System.Linq;
 
 public class G04_CombinedBlock : MonoBehaviour
 {
-    public bool PickedUp { get; private set; }
-    public Vector3 InitialPos { get; private set; }
     public List<G04_Block> GetBlocks { get { return _blocks; } }
+    public bool GetIsOnGrid { get { return _isOnGrid; } }
+
     private List<G04_Block> _blocks = new List<G04_Block>();
+    private bool _isPickedUp = false;
+    private bool _isOnGrid;
     private G04_Grid _storageGrid;
     private SortingGroup _sortingGroup;
+    private Vector3 _initialPos;
 
     private void Awake() {
-        InitialPos = transform.position;
         _sortingGroup = GetComponent<SortingGroup>();
+        _storageGrid = FindObjectOfType<G04_Grid>();
+
+        Debug.Log(_isOnGrid);
 
         var startBlocks = GetComponentsInChildren<G04_Block>();
         foreach (var block in startBlocks) {
             _blocks.Add(block);
         }
+    }
 
-        _storageGrid = FindObjectOfType<G04_Grid>();
+    private void Start() {
+        _isOnGrid = IsGroupPosOnGrid(this.transform.position);
+        
     }
 
     private void Update() {
-        if (PickedUp) {
+        if (_isPickedUp) {
             UpdatePos();
         }
     }
 
-
     private void UpdatePos() {
         Vector3 mouseWorldPos = GetMouseWorldPosition();
-        Vector3 offset = GetCombinedBlockOffset(_blocks);
-        Vector3 newPos = mouseWorldPos - offset;
-        newPos.z = transform.position.z;
+        mouseWorldPos.z = this.transform.position.z;
 
-        Debug.Log($"Parent position before: {transform.position}, new position: {newPos}");
+        if (IsGroupPosOnGrid(mouseWorldPos)) {
+            Vector3 offset = mouseWorldPos - this.transform.position;
+            Vector3[] snappedBlocksPos = new Vector3[_blocks.Count];
 
-        if (IsGroupPosOnGrid(newPos)) {
-            // calc snap pos for each block
-            Vector3[] snappedPositions = new Vector3[_blocks.Count];
             for (int i = 0; i < _blocks.Count; i++) {
-                snappedPositions[i] = _storageGrid.GetClosestCellPos(_blocks[i].transform.position + newPos - transform.position);
+                var newPos = _blocks[i].transform.position + offset;
+                var snappedPos = _storageGrid.GetClosestCellPos(newPos);
+                snappedBlocksPos[i] = snappedPos;
             }
 
-            // calc average snap pos to the center
-            Vector3 snappedCenter = Vector3.zero;
-            foreach (var snappedPos in snappedPositions) {
-                snappedCenter += snappedPos;
-            }
+            Vector3 newCenterPos = G04_BlockManager.GetCombinedBlockPosition(snappedBlocksPos);
+            this.transform.position = newCenterPos;
 
-            snappedCenter /= snappedPositions.Length;
-
-            transform.position = snappedCenter;
-            
-            //Debug.Log("Mouse Position: " + mouseWorldPos);
-            //Debug.Log("Offset: " + offset);
-            //Debug.Log("Calculated Position: " + newPos);
-            Debug.Log("Snapped Center: " + snappedCenter);
-
-            if (IsGroupPosTaken(snappedPositions)) {
-                foreach (var block in _blocks) {
-                    block.ToggleEligible(false);
-                }
-            } else {
-                foreach (var block in _blocks) {
-                    block.ToggleEligible(true);
-                }
+            bool isGroupPosTaken = IsGroupPosTaken(this.transform.position);
+            foreach (var block in _blocks) {
+                block.ToggleEligible(!isGroupPosTaken);
             }
         } else {
-            transform.position = newPos;
-
+            this.transform.position = mouseWorldPos;
             foreach (var block in _blocks) {
                 block.ToggleEligible(true);
             }
         }
-    }
-
-    public void AddBlock(G04_Block block) {
-        _blocks.Add(block);
-        block.CombinedBlock = this;
-        block.transform.parent = this.transform;
     }
 
     private Vector3 GetMouseWorldPosition() {
@@ -100,9 +83,9 @@ public class G04_CombinedBlock : MonoBehaviour
         return true;
     }
 
-    private bool IsGroupPosOnGrid(Vector3 pos) {
-        foreach (G04_Block block in _blocks) {
-            Vector3 blockPos = block.transform.position + pos - transform.position;
+    private bool IsGroupPosOnGrid(Vector3 centerPos) {
+        foreach (var block in _blocks) {
+            Vector3 blockPos = block.transform.position + centerPos - transform.position;
             if (!_storageGrid.IsOnGrid(blockPos)) {
                 return false;
             }            
@@ -110,90 +93,65 @@ public class G04_CombinedBlock : MonoBehaviour
         return true;
     }
 
-    private bool IsGroupPosTaken(Vector3[] snappedPositions) {
-        foreach (var snappedPos in snappedPositions) {
-            if (_storageGrid.IsPosTaken(snappedPos)) {
+    private bool IsGroupPosTaken(Vector3 centerPos) {
+        foreach (var block in _blocks) {
+            Vector3 blockPos = block.transform.position + centerPos - transform.position;
+            if (_storageGrid.IsPosTaken(blockPos)) {
                 return true;
             }            
         }
         return false;
     }
-
-    public static Vector3 GetCombinedBlockOffset(List<G04_Block> blocks) {
-        if (blocks.Count == 0) {
-            return Vector3.zero;
-        }
-
-        float minX = float.MaxValue;
-        float maxX = float.MinValue;
-        float minY = float.MaxValue;
-        float maxY = float.MinValue;
-
-        foreach (var block in blocks) {
-            Vector3 localPos = block.transform.localPosition;
-
-            minX = Mathf.Min(minX, localPos.x);
-            maxX = Mathf.Max(maxX, localPos.x);
-            minY = Mathf.Min(minY, localPos.y);
-            maxY = Mathf.Max(maxY, localPos.y);
-        }
-
-        float centerX = (minX + maxX) / 2f;
-        float centerY = (minY + maxY) / 2f;
-
-        Debug.Log("minX " + minX);
-        Debug.Log("maxX " + maxX);
-        Debug.Log("minY " + minY);
-        Debug.Log("maxY " + maxY);
-
-        return new Vector3(centerX, centerY, 0f);
+    
+    public void AddBlock(G04_Block block) {
+        _blocks.Add(block);
+        block.CombinedBlock = this;
+        block.transform.parent = this.transform;
     }
 
     public void OnPickUp() {
-        InitialPos = this.transform.position;
-
-        // update cells to empty(none)
-        foreach (G04_Block block in _blocks) {
+        // set all current block cells to empty (null)
+        foreach (var block in _blocks) {           
             (int, int) blockCoor = _storageGrid.GetBlockCoor(block); // returns (-1, -1) if no match
-            //Debug.Log("Block coor: " + blockCoor);
-
             if (blockCoor.Item1 > -1) {
-                //Debug.Log("Updating block coor info");
                 _storageGrid.UpdateCellBlockInfo(null, blockCoor);
             }
         }
-
+        
+        _initialPos = this.transform.position;
         _sortingGroup.sortingOrder = 1;
-        PickedUp = true;
+        _isOnGrid = false;
+        _isPickedUp = true;
     }
 
     public void OnDropDown() {
         if (IsGroupPosEligible()) {
             foreach (G04_Block block in _blocks) {
                 Vector3 blockWorldPos = block.transform.position;
-                Vector3 closestCellPos = _storageGrid.GetClosestCellPos(blockWorldPos);
                 (int, int) closestCellCoor = _storageGrid.GetClosestCellCoor(blockWorldPos);
 
-                block.transform.position = closestCellPos;
                 _storageGrid.UpdateCellBlockInfo(block, closestCellCoor);
                 block.ToggleEligible(true);
+                _isOnGrid = true;
             }            
         } else {
-            this.transform.position = InitialPos;
-            var isOnGrid = IsGroupPosOnGrid(this.transform.position);
-            
-            foreach (G04_Block block in _blocks) {
-                block.ToggleEligible(true);
+            this.transform.position = _initialPos;
+            bool isOnGrid = IsGroupPosOnGrid(this.transform.position);
 
+            foreach (var block in _blocks) {
+                block.ToggleEligible(true);
                 if (isOnGrid) {
-                    Vector3 blockWorldPos = block.transform.position;
-                    (int, int) closestCellCoor = _storageGrid.GetClosestCellCoor(blockWorldPos);
+                    (int, int) closestCellCoor = _storageGrid.GetClosestCellCoor(block.transform.position);
                     _storageGrid.UpdateCellBlockInfo(block, closestCellCoor);
                 }
+            }
+
+            if (isOnGrid) {
+                _isOnGrid = true;
             }
         }
 
         _sortingGroup.sortingOrder = 0;
-        PickedUp = false;
+        _isPickedUp = false;
     }
 }

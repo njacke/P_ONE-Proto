@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq.Expressions;
+using System.Linq;
 using UnityEngine;
 
 public class G04_BlockManager : MonoBehaviour
@@ -25,7 +25,11 @@ public class G04_BlockManager : MonoBehaviour
         }
 
         if (Input.GetMouseButtonDown(1)) {
-            SelectBlock();
+            if (_pickedBlock == null) {
+                SelectBlock();
+            } else {
+                _pickedBlock.transform.Rotate(0f, 0f, 90f);
+            }
         }
 
         if (Input.GetMouseButtonDown(2)) {
@@ -40,11 +44,15 @@ public class G04_BlockManager : MonoBehaviour
             Debug.Log("Hit: " + hit.collider.name);
             _pickedBlock = hit.collider.GetComponentInParent<G04_CombinedBlock>();
             if (_pickedBlock != null) {
-                foreach (G04_Block block in _pickedBlock.GetBlocks) {
-                    block.ToggleSelected(false);
+                foreach (var combinedBlock in _selectedCombinedBlocks) {
+                    foreach (var block in combinedBlock.GetBlocks) {
+                        block.ToggleSelected(false);
+                    }
                 }
 
+                _selectedCombinedBlocks.Clear();
                 _pickedBlock.OnPickUp();
+                
                 Debug.Log("Block picked up.");
             }
 
@@ -66,17 +74,16 @@ public class G04_BlockManager : MonoBehaviour
         if (hit.collider != null) {
             G04_CombinedBlock combinedBlock = hit.collider.GetComponentInParent<G04_CombinedBlock>();
 
-            if (combinedBlock != null && !combinedBlock.PickedUp) {
+            if (combinedBlock != null && combinedBlock.GetIsOnGrid) {
                 if (_selectedCombinedBlocks.Contains(combinedBlock)) { // deselect if selected
-                    foreach (G04_Block block in combinedBlock.GetBlocks) {
+                    foreach (var block in combinedBlock.GetBlocks) {
                         block.ToggleSelected(false);
                     }
 
                     _selectedCombinedBlocks.Remove(combinedBlock);
-
                 }
                 else if (_selectedCombinedBlocks.Count < _maxSelectedCombinedBlocks) { // select if not selected & not max selected
-                    foreach (G04_Block block in combinedBlock.GetBlocks) {
+                    foreach (var block in combinedBlock.GetBlocks) {
                         block.ToggleSelected(true);
                     }
 
@@ -95,8 +102,14 @@ public class G04_BlockManager : MonoBehaviour
     public void CombineBlocks() {
         if(_selectedCombinedBlocks.Count == _maxSelectedCombinedBlocks) {
             if(_storageGrid.CheckCombinedBlocksAdjacent(_selectedCombinedBlocks[0], _selectedCombinedBlocks[1])) {
+                var blocks = new List<G04_Block>();
+                foreach (var combinedBlock in _selectedCombinedBlocks) {
+                    blocks.AddRange(combinedBlock.GetBlocks);
+                }
 
-                var newPos = GetCombinedBlocksPosition(_selectedCombinedBlocks);
+                Vector3[] blocksPos = blocks.Select(x => x.transform.position).ToArray();
+
+                Vector3 newPos = GetCombinedBlockPosition(blocksPos);
                 var newCombinedBlock = Instantiate(_combinedBlockPrefab, newPos, Quaternion.identity).GetComponent<G04_CombinedBlock>();
 
                 for (int i = 0; i < _selectedCombinedBlocks.Count; i++) {
@@ -131,35 +144,28 @@ public class G04_BlockManager : MonoBehaviour
         return Camera.main.ScreenToWorldPoint(mousePosition);
     }
 
-    private Vector3 GetCombinedBlocksPosition(List<G04_CombinedBlock> combinedBlocks) {
-        if (combinedBlocks.Count == 0) return Vector3.zero;
+    public static Vector3 GetCombinedBlockPosition(Vector3[] blocksPos) {
+        if (blocksPos.Length == 0) return Vector3.zero;
 
         float minX = float.MaxValue;
         float maxX = float.MinValue;
         float minY = float.MaxValue;
         float maxY = float.MinValue;
 
-        foreach (G04_CombinedBlock combinedBlock in combinedBlocks) {
-            foreach (G04_Block block in combinedBlock.GetBlocks) {
-                Vector3 blockPos = block.transform.position;
+        foreach (var blockPos in blocksPos) {
 
-                minX = Mathf.Min(minX, blockPos.x);
-                maxX = Mathf.Max(maxX, blockPos.x);
-                minY = Mathf.Min(minY, blockPos.y);
-                maxY = Mathf.Max(maxY, blockPos.y);
-            }
+            minX = Mathf.Min(minX, blockPos.x);
+            maxX = Mathf.Max(maxX, blockPos.x);
+            minY = Mathf.Min(minY, blockPos.y);
+            maxY = Mathf.Max(maxY, blockPos.y);
         }
-
-        Debug.Log("minX " + minX);
-        Debug.Log("maxX " + maxX);
-        Debug.Log("minY " + minY);
-        Debug.Log("maxY " + maxY);
 
         float centerX = (minX + maxX) / 2f;
         float centerY = (minY + maxY) / 2f;
 
-        Debug.Log("X: " + centerX + "Y " + centerY);
+        //Debug.Log("X: " + centerX + "Y " + centerY);
 
         return new Vector3(centerX, centerY, 0f);
     }
+
 }

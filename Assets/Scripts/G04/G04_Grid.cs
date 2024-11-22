@@ -33,9 +33,9 @@ public class G04_Grid : MonoBehaviour
         _gridMinY = 0f - _gridSizeY / 2f;
         _gridMaxY = 0f + _gridSizeY / 2f;
 
-        // get Pos of top left cell -> coordinates (0,0)
+        // get Pos of bot left cell -> coordinates (0,0)
         float startPosX = _gridMinX + _cellSize / 2f;
-        float startPosY = _gridMaxY - _cellSize / 2f;
+        float startPosY = _gridMinY + _cellSize / 2f;
 
         var currentY = startPosY;
 
@@ -45,11 +45,11 @@ public class G04_Grid : MonoBehaviour
                 _gridWorldPos[i, j] = new Vector2(currentX, currentY);
                 currentX += _cellSize;
             }
-            currentY -= _cellSize;
+            currentY += _cellSize;
         }
     }
 
-    public bool IsPosTaken(Vector2 pos) {
+    public bool IsPosTaken(Vector3 pos) {
         var closestCell = GetClosestCellCoor(pos);
         if (_gridBlocks[closestCell.Item1, closestCell.Item2] != null) {
             //Debug.Log("position taken");
@@ -59,7 +59,7 @@ public class G04_Grid : MonoBehaviour
         return false;
     }
 
-    public (int, int) GetClosestCellCoor(Vector2 pos) {
+    public (int, int) GetClosestCellCoor(Vector3 pos) {
         float closestDistance = float.MaxValue;
         (int, int) closestCell = (-1, -1);
 
@@ -77,9 +77,9 @@ public class G04_Grid : MonoBehaviour
         return closestCell;
     }
 
-    public Vector2 GetClosestCellPos(Vector2 pos) {
+    public Vector3 GetClosestCellPos(Vector3 pos) {
         (int, int) closestCell = GetClosestCellCoor(pos);
-        Vector2 closestPos = _gridWorldPos[closestCell.Item1, closestCell.Item2];
+        Vector3 closestPos = _gridWorldPos[closestCell.Item1, closestCell.Item2];
 
         return closestPos;
     }
