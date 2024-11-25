@@ -45,9 +45,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 454050e55a77196419f6ca2fb1008eab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _dragThresholdFactor: 0.2
-  _pickedUp: 0
-  _dragThreshold: 0
+  _tier: 0
+  _type: 0
+  _color: {r: 0.7735849, g: 0.7735849, b: 0.7735849, a: 1}
+  _totalSize: 0
+  _level: 1
+  _baseValue: 100
 --- !u!210 &3972389937117325810
 SortingGroup:
   m_ObjectHideFlags: 0

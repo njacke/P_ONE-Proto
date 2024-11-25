@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 
 public class G04_Grid : MonoBehaviour
 {
@@ -151,5 +152,68 @@ public class G04_Grid : MonoBehaviour
         }
 
         return coordsList;
+    }
+
+    public G04_CombinedBlock[] GetAdjacentCombinedBlocks(G04_CombinedBlock combinedBlock) {
+        var adjacentCombinedBlocks = new List<G04_CombinedBlock>();
+        
+        foreach (var block in combinedBlock.GetBlocks) {
+            var adjBlocks = GetAdjacentBlocks(block);
+            foreach (var adjBlock in adjBlocks) {
+                if (adjBlock == null || adjBlock.CombinedBlock == combinedBlock || adjacentCombinedBlocks.Contains(adjBlock.CombinedBlock)) {
+                    continue;
+                } else {
+                    adjacentCombinedBlocks.Add(adjBlock.CombinedBlock);
+                }
+            }
+        }
+
+        return adjacentCombinedBlocks.ToArray();
+    }
+
+    public G04_Block[] GetAdjacentBlocks(G04_Block block) {
+        G04_Block[] blocks = new G04_Block[4];
+
+        if (block == null) {
+            Debug.Log("Block doesn't exist");
+            return blocks;
+        }
+
+        (int, int)[] adjacentBlocksCoor= new (int, int)[4];
+
+        (int, int) blockCoor = GetBlockCoor(block);
+        adjacentBlocksCoor[0] = (blockCoor.Item1 + 1, blockCoor.Item2);
+        adjacentBlocksCoor[1] = (blockCoor.Item1 - 1, blockCoor.Item2);
+        adjacentBlocksCoor[2] = (blockCoor.Item1, blockCoor.Item2 + 1);
+        adjacentBlocksCoor[3] = (blockCoor.Item1, blockCoor.Item2 - 1);
+
+        for (int i = 0; i < blocks.Length; i++) {
+            blocks[i] = GetBlock(adjacentBlocksCoor[i]);
+        }
+
+        return blocks;
+    }
+
+    public G04_Block GetBlock((int, int) blockCoor) {
+        // if index out of range
+        if (blockCoor.Item1 < 0 || blockCoor.Item1 >= _gridBlocks.GetLength(0) || blockCoor.Item2 < 0 || blockCoor.Item2 >= _gridBlocks.GetLength(1)) {
+            return null;
+        }
+
+        return _gridBlocks[blockCoor.Item1, blockCoor.Item2];
+    }
+
+    public G04_CombinedBlock[] GetAllCombinedBlocksOnGrid() {
+        var combinedBlocks = new List<G04_CombinedBlock>();
+
+        foreach (var combinedBlock in _gridCombinedBlocks) {
+            if (combinedBlock == null || combinedBlocks.Contains(combinedBlock)) {
+                continue;
+            } else {
+                combinedBlocks.Add(combinedBlock);
+            }
+        }
+
+        return combinedBlocks.ToArray();
     }
 }
