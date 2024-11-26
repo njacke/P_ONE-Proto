@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine;
-using UnityEngine.Rendering.Universal;
 
 public class G04_Grid : MonoBehaviour
 {
@@ -16,7 +15,7 @@ public class G04_Grid : MonoBehaviour
     [SerializeField] private int _gridSizeY = 4;
     [SerializeField] private float _cellSize = 1f;
 
-    private Vector2[,] _gridWorldPos;
+    private Vector3[,] _gridWorldPos;
     private G04_Block[,] _gridBlocks;
     private G04_CombinedBlock[,] _gridCombinedBlocks;
     private float _gridMinX;
@@ -25,14 +24,14 @@ public class G04_Grid : MonoBehaviour
     private float _gridMaxY;
 
     private void Awake() {
-        _gridWorldPos = new Vector2[_gridSizeX, _gridSizeY];
+        _gridWorldPos = new Vector3[_gridSizeX, _gridSizeY];
         _gridBlocks = new G04_Block[_gridSizeX, _gridSizeY];
         _gridCombinedBlocks = new G04_CombinedBlock[_gridSizeX, _gridSizeY];
 
-        _gridMinX = 0f - _gridSizeX / 2f;
-        _gridMaxX = 0f + _gridSizeX / 2f;
-        _gridMinY = 0f - _gridSizeY / 2f;
-        _gridMaxY = 0f + _gridSizeY / 2f;
+        _gridMinX = -_gridSizeX * _cellSize / 2f;
+        _gridMaxX = _gridSizeX * _cellSize / 2f;
+        _gridMinY = -_gridSizeY * _cellSize / 2f;
+        _gridMaxY = _gridSizeY * _cellSize / 2f;
 
         // get Pos of bot left cell -> coordinates (0,0)
         float startPosX = _gridMinX + _cellSize / 2f;
@@ -40,10 +39,13 @@ public class G04_Grid : MonoBehaviour
 
         var currentY = startPosY;
 
-        for (int i = 0; i < _gridSizeX; i++) {
+        // loop through rows
+        for (int i = 0; i < _gridSizeY; i++) {
             var currentX = startPosX;
-            for (int j = 0; j < _gridSizeY; j++) {
-                _gridWorldPos[i, j] = new Vector2(currentX, currentY);
+            // loop through columns
+            for (int j = 0; j < _gridSizeX; j++) {
+                _gridWorldPos[j, i] = new Vector3(currentX, currentY, 0);
+                //Debug.Log("New grid position added with X: " + currentX + " Y: " + currentY + " at coor X: " + j + " Y: " + i );
                 currentX += _cellSize;
             }
             currentY += _cellSize;
@@ -61,12 +63,13 @@ public class G04_Grid : MonoBehaviour
     }
 
     public (int, int) GetClosestCellCoor(Vector3 pos) {
+        //Debug.Log("Finding closest cell to pos: " + pos);
         float closestDistance = float.MaxValue;
         (int, int) closestCell = (-1, -1);
 
         for (int i = 0; i < _gridWorldPos.GetLength(0); i++) {
             for (int j = 0; j < _gridWorldPos.GetLength(1); j++) {
-                float distance = Vector2.Distance(_gridWorldPos[i, j], pos);
+                float distance = Vector3.Distance(_gridWorldPos[i, j], pos);
 
                 if (distance < closestDistance) {
                     closestDistance = distance;
@@ -74,14 +77,17 @@ public class G04_Grid : MonoBehaviour
                 }
             }
         }
+        //Debug.Log("Closest cel has pos: " + _gridWorldPos[closestCell.Item1, closestCell.Item2] + " with coor X: " + closestCell.Item1 + " Y: " + closestCell.Item2 + " and distance: " + closestDistance);
 
         return closestCell;
     }
 
     public Vector3 GetClosestCellPos(Vector3 pos) {
+        //Debug.Log("Get closest cell pos called");
         (int, int) closestCell = GetClosestCellCoor(pos);
         Vector3 closestPos = _gridWorldPos[closestCell.Item1, closestCell.Item2];
 
+        //Debug.Log("Closest cell pos is: " + closestPos);
         return closestPos;
     }
 

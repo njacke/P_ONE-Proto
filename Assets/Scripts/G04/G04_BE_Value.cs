@@ -6,8 +6,8 @@ public class G04_BE_Value : G04_BlockEffect
 {
     [SerializeField] private int _basePower = 50;
 
-    public override void ResolveEffect(G04_CombinedBlock target) {
-        int newBaseValue = target.GetBlockBaseValue + _basePower * _myBlock.GetBlockLevel;
-        target.SetBaseValue(newBaseValue);
+    public override void ResolveEffect(G04_CombinedBlock target, int effectLevel) {
+        float newBonusValue = target.GetBlockBonusValue + _basePower * effectLevel;
+        target.SetBonusValue(newBonusValue);
     }
 }

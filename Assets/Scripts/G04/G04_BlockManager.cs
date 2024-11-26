@@ -7,30 +7,61 @@ public class G04_BlockManager : MonoBehaviour
 {
     public static Action<G04_BlockManager> OnBlockSpawned;
     public static Action<G04_BlockManager> OnBlockCombined;
+    public static Action<G04_BlockManager> OnStartBlockPlaced;
+    public static Action<G04_BlockManager> OnSelectionChanged;
+
+    public List<G04_CombinedBlock> GetSelectedCombinedBlocks { get { return _selectedCombinedBlocks; } }
+
     [SerializeField] private GameObject[] _combinedBlockPrefabs;
     [SerializeField] private GameObject[] _startBlockPrefabs;
     [SerializeField] private Vector3 _startBlockPos;
+
     private G04_CombinedBlock _currentStartBlock;
     private int _maxSelectedCombinedBlocks = 2;
     private List<G04_CombinedBlock> _selectedCombinedBlocks = new();
-    private G04_Grid _storageGrid;
+    private G04_Grid _grid;
     private G04_CombinedBlock _pickedBlock;
 
     void Start() {
-        _storageGrid = FindObjectOfType<G04_Grid>();
+        _grid = G04_GameManager.Instance.GetGrid;
+        OnSelectionChanged?.Invoke(this);
         SpawnBlock();
     }
 
     private void OnEnable() {
         G04_UI.OnTurnEnded += G04_UI_OnTurnEnded;
+        G04_CombinedBlock.OnGridPlacement += G04_CombinedBlock_OnGridPlacement;
     }
 
     private void OnDisable() {
         G04_UI.OnTurnEnded -= G04_UI_OnTurnEnded;
+        G04_CombinedBlock.OnGridPlacement -= G04_CombinedBlock_OnGridPlacement;
+    }
+
+    private void G04_CombinedBlock_OnGridPlacement(G04_CombinedBlock block) {
+        if (block == _currentStartBlock) {
+            OnStartBlockPlaced?.Invoke(this);
+            _currentStartBlock = null;
+            SpawnBlock();
+        }
+
+        //ResolveImmediateEffects();
     }
 
     private void G04_UI_OnTurnEnded() {
+        ResetSelection();
         SpawnBlock();
+        ResolveEndOfTurnEffects();
+        ResolveLevelUps();
+        //ResolveImmediateEffects();
+    }
+
+    private void ResetSelection() {
+        foreach (var combinedBlock in _selectedCombinedBlocks) {
+            combinedBlock.OnSelect(false);
+        }
+        _selectedCombinedBlocks.Clear();
+        OnSelectionChanged?.Invoke(this);
     }
 
     void Update() {
@@ -56,7 +87,7 @@ public class G04_BlockManager : MonoBehaviour
     }
 
     private void SpawnBlock() {
-        if (_currentStartBlock != null && !_currentStartBlock.GetIsOnGrid) {
+        if ((_currentStartBlock != null && !_currentStartBlock.GetIsOnGrid) || G04_GameManager.Instance.GetRemainingBlocks <= 0 ) {
             return;
         }
 
@@ -69,23 +100,17 @@ public class G04_BlockManager : MonoBehaviour
         RaycastHit2D hit = Physics2D.Raycast(GetMouseWorldPosition(), Vector2.zero);
 
         if (hit.collider != null) {
-            Debug.Log("Hit: " + hit.collider.name);
+            //Debug.Log("Hit: " + hit.collider.name);
             _pickedBlock = hit.collider.GetComponentInParent<G04_CombinedBlock>();
             if (_pickedBlock != null) {
-                foreach (var combinedBlock in _selectedCombinedBlocks) {
-                    foreach (var block in combinedBlock.GetBlocks) {
-                        block.ToggleSelected(false);
-                    }
-                }
-
-                _selectedCombinedBlocks.Clear();
+                ResetSelection();
                 _pickedBlock.OnPickUp();
                 
-                Debug.Log("Block picked up.");
+                //Debug.Log("Block picked up.");
             }
 
         } else {
-            Debug.Log("Nothing hit!");
+            //Debug.Log("Nothing hit!");
         }
     }
     
@@ -104,68 +129,66 @@ public class G04_BlockManager : MonoBehaviour
 
             if (combinedBlock != null && combinedBlock.GetIsOnGrid) {
                 if (_selectedCombinedBlocks.Contains(combinedBlock)) { // deselect if selected
-                    foreach (var block in combinedBlock.GetBlocks) {
-                        block.ToggleSelected(false);
-                    }
-
+                    combinedBlock.OnSelect(false);
                     _selectedCombinedBlocks.Remove(combinedBlock);
+                    OnSelectionChanged?.Invoke(this);
+
                 }
                 else if (_selectedCombinedBlocks.Count < _maxSelectedCombinedBlocks) { // select if not selected & not max selected
-                    foreach (var block in combinedBlock.GetBlocks) {
-                        block.ToggleSelected(true);
-                    }
-
+                    combinedBlock.OnSelect(true);
                     _selectedCombinedBlocks.Add(combinedBlock);
-
-                }
-                else { // return if max blocks selected
-                    return;
+                    OnSelectionChanged?.Invoke(this);
                 }
 
-                Debug.Log("Selected blocks count: " + _selectedCombinedBlocks.Count);
+                //Debug.Log("Selected blocks count: " + _selectedCombinedBlocks.Count);
             }
         }
     }
 
     public void CombineBlocks() {
         if (G04_GameManager.Instance.GetRemainingCombines <= 0) {
-            Debug.Log("No combines remaining. End turn to refresh.");
+            GameLog.Instance.UpdateLog("No combines remaining. End turn to refresh.");
             return;
         }
 
         if(_selectedCombinedBlocks.Count == _maxSelectedCombinedBlocks) {
-            if(_storageGrid.CheckCombinedBlocksAdjacent(_selectedCombinedBlocks[0], _selectedCombinedBlocks[1])) {
-                if (_selectedCombinedBlocks[0].GetBlockTier != _selectedCombinedBlocks[1].GetBlockTier) {
-                    Debug.Log("Can't combine. Block tiers don't match.");
+            // atm works only for combining 2
+            var combinedBlock1 = _selectedCombinedBlocks[0];
+            var combinedBlock2 = _selectedCombinedBlocks[1];
+            ResetSelection();
+
+            if(_grid.CheckCombinedBlocksAdjacent(combinedBlock1, combinedBlock2)) {
+                if (combinedBlock1.GetBlockTier != combinedBlock2.GetBlockTier) {
+                    GameLog.Instance.UpdateLog("Can't combine. Block tiers don't match.");
                     return;
                 }
 
                 G04_CombinedBlock.BlockType newType = G04_CombinedBlock.BlockType.None;
 
                 //TODO: change to something better when time
-                if (_selectedCombinedBlocks[0].GetBlockType == _selectedCombinedBlocks[1].GetBlockType) {
-                    newType = _selectedCombinedBlocks[0].GetBlockType;
-                } else if (_selectedCombinedBlocks[0].GetBlockTier == G04_CombinedBlock.BlockTier.One) {
-                    if (_selectedCombinedBlocks[0].GetBlockType == G04_CombinedBlock.BlockType.Blue ||
-                                    _selectedCombinedBlocks[1].GetBlockType == G04_CombinedBlock.BlockType.Blue) {
-                        if (_selectedCombinedBlocks[0].GetBlockType == G04_CombinedBlock.BlockType.Red ||
-                                    _selectedCombinedBlocks[1].GetBlockType == G04_CombinedBlock.BlockType.Red) {
+                if (combinedBlock1.GetBlockType == combinedBlock2.GetBlockType) {
+                    newType = combinedBlock1.GetBlockType;
+                } else if (combinedBlock1.GetBlockTier == G04_CombinedBlock.BlockTier.One) {
+                    if (combinedBlock1.GetBlockType == G04_CombinedBlock.BlockType.Blue ||
+                                    combinedBlock2.GetBlockType == G04_CombinedBlock.BlockType.Blue) {
+                        if (combinedBlock1.GetBlockType == G04_CombinedBlock.BlockType.Red ||
+                                    combinedBlock2.GetBlockType == G04_CombinedBlock.BlockType.Red) {
                             newType = G04_CombinedBlock.BlockType.Purple;
-                        } else if (_selectedCombinedBlocks[0].GetBlockType == G04_CombinedBlock.BlockType.Yellow ||
-                                    _selectedCombinedBlocks[1].GetBlockType == G04_CombinedBlock.BlockType.Yellow) {
+                        } else if (combinedBlock1.GetBlockType == G04_CombinedBlock.BlockType.Yellow ||
+                                    combinedBlock2.GetBlockType == G04_CombinedBlock.BlockType.Yellow) {
                             newType = G04_CombinedBlock.BlockType.Green;
                         }
                     } else {
                         newType = G04_CombinedBlock.BlockType.Orange;
                     }
-                } else if (_selectedCombinedBlocks[0].GetBlockTier == G04_CombinedBlock.BlockTier.Two) {
+                } else if (combinedBlock1.GetBlockTier == G04_CombinedBlock.BlockTier.Two) {
                     newType = G04_CombinedBlock.BlockType.White;
                 }
 
                 var blocks = new List<G04_Block>();
-                foreach (var combinedBlock in _selectedCombinedBlocks) {
-                    blocks.AddRange(combinedBlock.GetBlocks);
-                }
+                blocks.AddRange(combinedBlock1.GetBlocks);
+                blocks.AddRange(combinedBlock2.GetBlocks);
+
 
                 Vector3[] blocksPos = blocks.Select(x => x.transform.position).ToArray();
                 Vector3 newPos = GetCombinedBlockPosition(blocksPos);
@@ -180,29 +203,30 @@ public class G04_BlockManager : MonoBehaviour
                     _ => Instantiate(_combinedBlockPrefabs[0], newPos, Quaternion.identity).GetComponent<G04_CombinedBlock>(),
                 };
 
-                for (int i = 0; i < _selectedCombinedBlocks.Count; i++) {
-                    var combinedBlock = _selectedCombinedBlocks[i];
 
-                    for (int j = 0; j < combinedBlock.GetBlocks.Count; j++) {
-                        newCombinedBlock.AddBlock(combinedBlock.GetBlocks[j]);
-                        _storageGrid.UpdateCellBlockInfo(combinedBlock.GetBlocks[j], _storageGrid.GetBlockCoor(combinedBlock.GetBlocks[j]));
-                    }
-
-                    Destroy(combinedBlock.gameObject);               
+                for (int i = 0; i < blocks.Count; i++) {
+                    newCombinedBlock.AddBlock(blocks[i]);
+                    _grid.UpdateCellBlockInfo(blocks[i], _grid.GetBlockCoor(blocks[i]));
                 }
 
-                foreach (var block in newCombinedBlock.GetBlocks) {
-                    block.ToggleSelected(false);
-                }
+                var newLevel = Mathf.Max(combinedBlock1.GetBlockLevel, combinedBlock2.GetBlockLevel);
+                var newBonusValue = combinedBlock1.GetBlockBonusValue + combinedBlock2.GetBlockBonusValue;
+                var newMultiplier = combinedBlock1.GetBlockMultiplier + combinedBlock2.GetBlockMultiplier - 1f; // -1 because multiplier starts at 1 on a new block
+                newCombinedBlock.SetLevel(newLevel);
+                newCombinedBlock.SetMultiplier(newMultiplier);
+                newCombinedBlock.SetBonusValue(newBonusValue);
+                newCombinedBlock.UpdateValues();
 
-                _selectedCombinedBlocks.Clear();
+                Destroy(combinedBlock1.gameObject);
+                Destroy(combinedBlock2.gameObject);
+
                 OnBlockCombined?.Invoke(this);
 
             } else {
-                Debug.Log("Selected blocks are not adjacent.");
+                GameLog.Instance.UpdateLog("Selected blocks are not adjacent.");
             }
         } else {
-            Debug.Log(_maxSelectedCombinedBlocks + " need to be selected.");
+            GameLog.Instance.UpdateLog(_maxSelectedCombinedBlocks + " blocks need to be selected.");
         }
     }
 
@@ -236,4 +260,65 @@ public class G04_BlockManager : MonoBehaviour
         return new Vector3(centerX, centerY, 0f);
     }
 
+    private void ResolveEndOfTurnEffects() {
+        var blockStartLvlDict = new Dictionary<G04_CombinedBlock, int>();
+        G04_CombinedBlock[] allBlocks = _grid.GetAllCombinedBlocksOnGrid();
+        foreach (var combinedBlock in allBlocks) {
+            blockStartLvlDict[combinedBlock] = combinedBlock.GetBlockLevel;
+        }
+
+        foreach (var combinedBlock in allBlocks) {
+            // resolve target: self effects from this block
+            var selfEffects = combinedBlock.GetBlockEffects().Where(x => x.GetResolveType == G04_BlockEffect.ResolveType.Turn
+                                                                    && x.GetTargetType == G04_BlockEffect.TargetType.Self);
+            foreach (var effect in selfEffects) {
+                effect.ResolveEffect(combinedBlock, blockStartLvlDict[combinedBlock]);
+            }
+
+            // resolve target: other effects from adjacent blocks
+            G04_CombinedBlock[] adjComboBlocks = _grid.GetAdjacentCombinedBlocks(combinedBlock);        
+            foreach (var adjComboBlock in adjComboBlocks) {
+                var otherEffects = adjComboBlock.GetBlockEffects().Where(x => x.GetResolveType == G04_BlockEffect.ResolveType.Turn
+                                                                        && x.GetTargetType == G04_BlockEffect.TargetType.Other);
+                foreach (var effect in otherEffects) {
+                    effect.ResolveEffect(combinedBlock, blockStartLvlDict[adjComboBlock]);
+                }
+            }
+            combinedBlock.UpdateValues();
+        }
+    }
+
+    private void ResolveImmediateEffects() {
+        var blockStartLvlDict = new Dictionary<G04_CombinedBlock, int>();
+        G04_CombinedBlock[] allBlocks = _grid.GetAllCombinedBlocksOnGrid();
+        foreach (var combinedBlock in allBlocks) {
+            blockStartLvlDict[combinedBlock] = combinedBlock.GetBlockLevel;
+        }
+
+        foreach (var combinedBlock in allBlocks) {
+            // resolve target: self effects from this block
+            var selfEffects = combinedBlock.GetBlockEffects().Where(x => x.GetResolveType == G04_BlockEffect.ResolveType.Immediate
+                                                                    && x.GetTargetType == G04_BlockEffect.TargetType.Self);
+            foreach (var effect in selfEffects) {
+                effect.ResolveEffect(combinedBlock, blockStartLvlDict[combinedBlock]);
+            }
+
+            // resolve target: other effects from adjacent blocks
+            G04_CombinedBlock[] adjComboBlocks = _grid.GetAdjacentCombinedBlocks(combinedBlock);        
+            foreach (var adjComboBlock in adjComboBlocks) {
+                var otherEffects = adjComboBlock.GetBlockEffects().Where(x => x.GetResolveType == G04_BlockEffect.ResolveType.Immediate
+                                                                        && x.GetTargetType == G04_BlockEffect.TargetType.Other);
+                foreach (var effect in otherEffects) {
+                    effect.ResolveEffect(combinedBlock, blockStartLvlDict[adjComboBlock]);
+                }
+            }            
+            combinedBlock.UpdateValues();
+        }
+    }
+    private void ResolveLevelUps() {
+        G04_CombinedBlock[] allBlocks = _grid.GetAllCombinedBlocksOnGrid();
+        foreach (var combinedBlock in allBlocks) {
+            combinedBlock.SetLevel(combinedBlock.GetBlockLevel + 1);
+        }        
+    }
 }

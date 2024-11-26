@@ -5,34 +5,41 @@ using UnityEngine;
 public class G04_Block : MonoBehaviour
 {
     public G04_CombinedBlock CombinedBlock { get; set; }    
-    private SpriteRenderer _spriteRenderer;
-    private Color _currentColor;
+    [SerializeField] private GameObject _outline;
+    [SerializeField] float _outlineThickness = .05f;
+    private SpriteRenderer _mainSpriteRenderer;
+    private SpriteRenderer _outlineSpriteRenderer;
+    private Color _startColor;
 
 
-    void Awake() {        
-        _spriteRenderer = GetComponent<SpriteRenderer>();
+    void Awake() {      
+        _mainSpriteRenderer = GetComponent<SpriteRenderer>();  
+        _startColor = _mainSpriteRenderer.color;  
+
+        _outlineSpriteRenderer = _outline.GetComponent<SpriteRenderer>();
+        _outline.transform.localScale = Vector3.one + Vector3.one * _outlineThickness;
+
         CombinedBlock = GetComponentInParent<G04_CombinedBlock>();     
-        _currentColor = _spriteRenderer.color;   
     }
 
     public void ToggleSelected(bool selected) {
         if (selected) {
-            _spriteRenderer.color = Color.green;
+            _outlineSpriteRenderer.color = Color.green;
         } else {
-            _spriteRenderer.color = _currentColor;
+            _outlineSpriteRenderer.color = Color.black;
         }
     }
 
     public void ToggleEligible(bool eligible) {
         if (eligible) {
-            _spriteRenderer.color = _currentColor;
+            _outlineSpriteRenderer.color = Color.black;
         } else {
-            _spriteRenderer.color = Color.red;
+            _outlineSpriteRenderer.color = Color.red;
         }
     }
 
     public void UpdateColor(Color color) {
-        _currentColor = color;
-        _spriteRenderer.color = _currentColor;
+        _startColor = color;
+        _mainSpriteRenderer.color = _startColor;
     }
 }

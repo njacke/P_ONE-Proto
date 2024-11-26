@@ -7,14 +7,16 @@ using System.Linq;
 public class G04_CombinedBlock : MonoBehaviour
 {
     public static Action<G04_CombinedBlock> OnGridPlacement;
-    public static Action<G04_CombinedBlock> OnCurrentValueChanged;
+    public static Action<G04_CombinedBlock> OnValuesChanged;
+
     [SerializeField] private BlockTier _tier;
     [SerializeField] private BlockType _type;
     [SerializeField] private Color _color;
     [SerializeField] private int _totalSize = 0;
     [SerializeField] private int _level = 1;
-    [SerializeField] private int _baseValue = 100;
+    [SerializeField] private int _sizeValue = 100;
     [SerializeField] private bool _isPremade = false;
+    [SerializeField] private float _multiplier = 1;
 
     public List<G04_Block> GetBlocks { get { return _blocks; } }
     public bool GetIsOnGrid { get { return _isOnGrid; } }
@@ -22,16 +24,22 @@ public class G04_CombinedBlock : MonoBehaviour
     public BlockType GetBlockType { get { return _type; } }  
     public int GetBlockSize { get { return _totalSize; } }  
     public int GetBlockLevel { get { return _level; } }  
-    public int GetBlockBaseValue { get { return _baseValue; } }  
-    public float GetBlockCurrentValue { get { return _currentValue; } }  
+    public float GetBlockBaseValue { get { return _baseValue; } }  
+    public float GetBlockBonusValue { get { return _bonusValue; } }  
+    public float GetBlockMultiplier {get { return _multiplier; } } 
+    public float GetBlockTotalValue { get { return _totalValue; } }  
 
     private List<G04_Block> _blocks = new List<G04_Block>();
     private bool _isPickedUp = false;
     private bool _isOnGrid = false;
-    private G04_Grid _storageGrid;
+    private G04_Grid _grid;
     private SortingGroup _sortingGroup;
     private Vector3 _initialPos;
-    [SerializeField] private float _currentValue = 0f;
+    private Quaternion _initialRotation;
+
+    [SerializeField] private float _baseValue = 0;
+    [SerializeField] private float _bonusValue = 0;
+    [SerializeField] private float _totalValue = 0f;
 
     public enum BlockType {
         None,
@@ -53,15 +61,16 @@ public class G04_CombinedBlock : MonoBehaviour
 
     private void Awake() {
         _sortingGroup = GetComponent<SortingGroup>();
-        _storageGrid = FindObjectOfType<G04_Grid>();
     }
 
     private void Start() {
+        _grid = G04_GameManager.Instance.GetGrid;
+
         if (_isPremade) {
             var startBlocks = GetComponentsInChildren<G04_Block>();
             foreach (var block in startBlocks) {
                 AddBlock(block);
-                Debug.Log("Blocks count is " + _blocks.Count);
+                //Debug.Log("Blocks count is " + _blocks.Count);
             }
         }
 
@@ -70,39 +79,12 @@ public class G04_CombinedBlock : MonoBehaviour
             OnGridPlacement?.Invoke(this);
         }
 
-        _totalSize = _blocks.Count;
-        // temp solution for block value scaling
-        SetBaseValue(_baseValue * (1 << (_totalSize - 1)));
-        SetCurrentValue(_baseValue);
+        UpdateValues();      
     }
 
     private void Update() {
         if (_isPickedUp) {
             UpdatePos();
-        }
-    }
-
-    private void OnEnable() {
-        G04_CombinedBlock.OnGridPlacement += G04_CombinedBlock_OnGridPlacement;
-        G04_UI.OnTurnEnded += G04_UI_OnTurnEnded;
-    }
-
-    private void OnDisable() {
-        G04_CombinedBlock.OnGridPlacement += G04_CombinedBlock_OnGridPlacement;
-        G04_UI.OnTurnEnded -= G04_UI_OnTurnEnded;        
-    }
-
-    private void G04_CombinedBlock_OnGridPlacement(G04_CombinedBlock block) {
-        if (_isOnGrid) {
-            Debug.Log("Placed on grid called with receiver on grid");
-            ResolveImmediateEffects();
-        }
-    }
-
-    private void G04_UI_OnTurnEnded() {
-        if (_isOnGrid) {
-            ResolveTurnEffects();
-            ResolveImmediateEffects();      
         }
     }
 
@@ -116,7 +98,7 @@ public class G04_CombinedBlock : MonoBehaviour
 
             for (int i = 0; i < _blocks.Count; i++) {
                 var newPos = _blocks[i].transform.position + offset;
-                var snappedPos = _storageGrid.GetClosestCellPos(newPos);
+                var snappedPos = _grid.GetClosestCellPos(newPos);
                 snappedBlocksPos[i] = snappedPos;
             }
 
@@ -143,7 +125,7 @@ public class G04_CombinedBlock : MonoBehaviour
 
     private bool IsGroupPosEligible() {
         foreach (G04_Block block in _blocks) {
-            if (!_storageGrid.IsOnGrid(block.transform.position) || _storageGrid.IsPosTaken(block.transform.position)) {
+            if (!_grid.IsOnGrid(block.transform.position) || _grid.IsPosTaken(block.transform.position)) {
                 return false;
             }            
         }
@@ -153,7 +135,7 @@ public class G04_CombinedBlock : MonoBehaviour
     private bool IsGroupPosOnGrid(Vector3 centerPos) {
         foreach (var block in _blocks) {
             Vector3 blockPos = block.transform.position + centerPos - transform.position;
-            if (!_storageGrid.IsOnGrid(blockPos)) {
+            if (!_grid.IsOnGrid(blockPos)) {
                 return false;
             }            
         }
@@ -163,7 +145,7 @@ public class G04_CombinedBlock : MonoBehaviour
     private bool IsGroupPosTaken(Vector3 centerPos) {
         foreach (var block in _blocks) {
             Vector3 blockPos = block.transform.position + centerPos - transform.position;
-            if (_storageGrid.IsPosTaken(blockPos)) {
+            if (_grid.IsPosTaken(blockPos)) {
                 return true;
             }            
         }
@@ -177,16 +159,28 @@ public class G04_CombinedBlock : MonoBehaviour
         block.UpdateColor(_color);
     }
 
+    public void OnSelect(bool isSelected) {
+        foreach (var block in _blocks) {
+            block.ToggleSelected(isSelected);
+            if (isSelected) {
+                _sortingGroup.sortingOrder = 1;
+            } else {
+                _sortingGroup.sortingOrder = 0;
+            }
+        }
+    }
+
     public void OnPickUp() {
         // set all current block cells to empty (null)
         foreach (var block in _blocks) {           
-            (int, int) blockCoor = _storageGrid.GetBlockCoor(block); // returns (-1, -1) if no match
+            (int, int) blockCoor = _grid.GetBlockCoor(block); // returns (-1, -1) if no match
             if (blockCoor.Item1 > -1) {
-                _storageGrid.UpdateCellBlockInfo(null, blockCoor);
+                _grid.UpdateCellBlockInfo(null, blockCoor);
             }
         }
         
         _initialPos = this.transform.position;
+        _initialRotation =this.transform.rotation;
         _sortingGroup.sortingOrder = 1;
         _isOnGrid = false;
         _isPickedUp = true;
@@ -197,9 +191,9 @@ public class G04_CombinedBlock : MonoBehaviour
             // place to new positions (eligible placement)
             foreach (G04_Block block in _blocks) {
                 Vector3 blockWorldPos = block.transform.position;
-                (int, int) closestCellCoor = _storageGrid.GetClosestCellCoor(blockWorldPos);
+                (int, int) closestCellCoor = _grid.GetClosestCellCoor(blockWorldPos);
 
-                _storageGrid.UpdateCellBlockInfo(block, closestCellCoor);
+                _grid.UpdateCellBlockInfo(block, closestCellCoor);
                 block.ToggleEligible(true);
                 _isOnGrid = true;
                 OnGridPlacement?.Invoke(this);
@@ -207,20 +201,21 @@ public class G04_CombinedBlock : MonoBehaviour
         } else {
             // return to previous position (ineligible placement)
             this.transform.position = _initialPos;
+            this.transform.rotation = _initialRotation;
             bool isOnGrid = IsGroupPosOnGrid(this.transform.position);
 
             foreach (var block in _blocks) {
                 block.ToggleEligible(true);
                 if (isOnGrid) {
-                    (int, int) closestCellCoor = _storageGrid.GetClosestCellCoor(block.transform.position);
-                    _storageGrid.UpdateCellBlockInfo(block, closestCellCoor);
+                    (int, int) closestCellCoor = _grid.GetClosestCellCoor(block.transform.position);
+                    _grid.UpdateCellBlockInfo(block, closestCellCoor);
                 }
             }
 
             if (isOnGrid) {
                 _isOnGrid = true;
                 OnGridPlacement?.Invoke(this);
-                Debug.Log("Is on grid invoked");
+                //Debug.Log("Is on grid invoked");
             }
         }
 
@@ -232,41 +227,31 @@ public class G04_CombinedBlock : MonoBehaviour
         _level = newLevel;
     }
 
-    public void SetBaseValue(int baseValue) {
-        _baseValue = baseValue;
+    public void SetBonusValue(float newValue) {
+        _bonusValue = newValue;
+    }
+
+    public void SetMultiplier(float newValue) {
+        _multiplier = newValue;
     }
 
     public void SetCurrentValue(float newValue) {
-        _currentValue = newValue;
-        OnCurrentValueChanged?.Invoke(this);
+        _totalValue = newValue;
+        //Debug.Log("New current value called: " + newValue);
+        OnValuesChanged?.Invoke(this);
+    }
+
+    public void UpdateValues() {
+        Debug.Log("Bonus Value pre-update:" + _bonusValue);
+        _totalSize = _blocks.Count;
+        _baseValue = _totalSize * _sizeValue;
+        var currentValue = (_baseValue + _bonusValue) * _multiplier;
+        SetCurrentValue(currentValue);
+        Debug.Log("Bonus Value post-update:" + _bonusValue);
     }
 
     public G04_BlockEffect[] GetBlockEffects() {
-        var myEffects = GetComponents<G04_BlockEffect>();
+        var myEffects = GetComponentsInChildren<G04_BlockEffect>();
         return myEffects;
-    }
-
-
-    private void ResolveImmediateEffects() {
-        SetCurrentValue(_baseValue);
-
-        G04_CombinedBlock[] adjComboBlocks = _storageGrid.GetAdjacentCombinedBlocks(this);
-        Debug.Log("Adj combined blocks length: " + adjComboBlocks.Length);
-        foreach (var combBlock in adjComboBlocks) {
-            var effects = combBlock.GetBlockEffects().Where(x => x.GetResolveType == G04_BlockEffect.ResolveType.Immediate);
-            foreach (var effect in effects) {
-                effect.ResolveEffect(this);
-            }
-        }
-    }
-
-    private void ResolveTurnEffects() {
-        G04_CombinedBlock[] adjComboBlocks = _storageGrid.GetAdjacentCombinedBlocks(this);        
-        foreach (var combBlock in adjComboBlocks) {
-            var effects = combBlock.GetBlockEffects().Where(x => x.GetResolveType == G04_BlockEffect.ResolveType.Turn);
-            foreach (var effect in effects) {
-                effect.ResolveEffect(this);
-            }
-        }
     }
 }

@@ -4,10 +4,10 @@ using UnityEngine;
 
 public class G04_BE_Multiplier : G04_BlockEffect
 {
-    [SerializeField] private float _basePower = .2f;
+    [SerializeField] private float _basePower = .1f;
 
-    public override void ResolveEffect(G04_CombinedBlock target) {
-        float newCurrentValue = target.GetBlockCurrentValue * (1 + _basePower * _myBlock.GetBlockLevel);
-        target.SetCurrentValue(newCurrentValue);
+    public override void ResolveEffect(G04_CombinedBlock target, int effectLevel) {
+        float newValue = target.GetBlockMultiplier + _basePower * effectLevel;
+        target.SetMultiplier(newValue);
     }
 }
