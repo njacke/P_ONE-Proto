@@ -973,7 +973,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _friendlyStartSpawnCd: 1
-  _hostileStartSpawnCd: 0.8
+  _hostileStartSpawnCd: 0.9
   _npcPrefabs:
   - {fileID: 362164278478396242, guid: b32edc10f93e723428a4da6301108d4d, type: 3}
   - {fileID: 362164278478396242, guid: 4ba772106c252a349a76be47431c26a9, type: 3}

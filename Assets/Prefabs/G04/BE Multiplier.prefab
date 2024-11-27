@@ -46,4 +46,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _targetType: 2
   _resolveType: 2
-  _basePower: 0.1
+  _basePower: 0.05

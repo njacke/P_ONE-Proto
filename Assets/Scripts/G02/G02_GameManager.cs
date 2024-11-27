@@ -33,7 +33,7 @@ public class G02_GameManager : Singleton<G02_GameManager>
 
     private void Update() {
         if (Input.GetKeyDown(KeyCode.Escape)) {
-            SceneManager.LoadScene("MainMenu");
+            SceneManager.LoadScene("PlayMenu");
         }
     }
 

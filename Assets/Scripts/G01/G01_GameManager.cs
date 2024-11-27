@@ -56,7 +56,7 @@ public class G01_GameManager : Singleton<G01_GameManager>
 
     private void Update() {
         if (Input.GetKeyDown(KeyCode.Escape)) {
-            SceneManager.LoadScene("MainMenu");
+            SceneManager.LoadScene("PlayMenu");
             //Application.Quit();
         }
     }

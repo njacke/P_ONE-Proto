@@ -34,7 +34,7 @@ public class G04_GameManager : Singleton<G04_GameManager>
 
     private void Update() {
         if (Input.GetKeyDown(KeyCode.Escape)) {
-            SceneManager.LoadScene("MainMenu");
+            SceneManager.LoadScene("PlayMenu");
         }
     }
 

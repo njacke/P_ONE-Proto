@@ -33,7 +33,7 @@ public class G02_NPC : MonoBehaviour, G02_IDamageable
     private float _currentMoveDirCD = 0f;
     private float _attackRange = 0f;
     private float _startAttackCD = 0f;
-    private float _currentAttackCD = 0f;
+    private float _currentAttackCD = .5f; // start attack delay after spawning
     private bool _hasOrder = false;
     private Vector3 _currentOrderPos = Vector2.zero;
 

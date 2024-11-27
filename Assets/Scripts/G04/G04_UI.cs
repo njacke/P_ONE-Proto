@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 public class G04_UI : MonoBehaviour
 {
@@ -88,6 +90,7 @@ public class G04_UI : MonoBehaviour
     }
 
     public void EndTurnOnClick() {
+        EventSystem.current.SetSelectedGameObject(null);
         OnTurnEnded?.Invoke();
     }
 }

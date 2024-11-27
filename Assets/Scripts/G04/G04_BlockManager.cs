@@ -81,7 +81,7 @@ public class G04_BlockManager : MonoBehaviour
             }
         }
 
-        if (Input.GetMouseButtonDown(2)) {
+        if (Input.GetMouseButtonDown(2) || Input.GetKeyDown(KeyCode.Space)) {
             CombineBlocks();
         }        
     }

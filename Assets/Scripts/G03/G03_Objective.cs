@@ -47,6 +47,7 @@ public class G03_Objective : MonoBehaviour, G03_IDamageable
             Debug.Log("Objective destroyed; destroying object");
             _objectiveType = ObjectiveType.Destroyed;
             _spriteRenderer.color = Color.gray;
+            _spriteRenderer.sortingOrder = -4;
             OnDeath?.Invoke(this);
         }
 
