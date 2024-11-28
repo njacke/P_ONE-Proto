@@ -65,15 +65,15 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "GOAL\nPosition and combine blocks to reach goal total inventory value
-    in a given amount of turns.\n\nCONTROLS\nLMB (hold) - pick up block\nMouse (while
-    holding LMB) - drag picked up block\nRMB (dragging) - rotate picked up block\nRMB
-    (not dragging) - (de)select block\nMMB or SPACE - combine blocks \n\nRULES\nLevel
-    of each block in the grid increases by 1 each turn.\nBlock's level scales it's
-    block effect(s).\nExactly two blocks need to be selected to make a new block
-    (combine).\nOnly blocks of the same Tier (number of unique effects) can be combined.\nNew
-    block inherits unique effects, max level, sum of bonus points, sum of multipliers
-    from previous two blocks."
+  m_text: "GOAL\nPosition and combine items to reach goal inventory value in a given
+    amount of turns.\n\nCONTROLS\nLMB (hold) - pick up an item\nMouse (while holding
+    LMB) - drag picked up item\nRMB (dragging) - rotate picked up item\nRMB (not
+    dragging) - (de)select an inventory item\nMMB or SPACE - combine items \n\nRULES\nLevel
+    of each item in the grid increases by 1 each turn.\nItem's level scales it's
+    item effect(s).\nExactly two items need to be selected to create a combined item.\nOnly
+    items of the same Tier (# of unique effects) can be combined.\nCombined item
+    inherits unique effects, max level, sum of bonus points and sum of bonus multipliers
+    from previous two items."
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}

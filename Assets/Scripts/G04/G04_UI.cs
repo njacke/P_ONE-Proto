@@ -30,8 +30,8 @@ public class G04_UI : MonoBehaviour
     private void G04_BlockManager_OnSelectionChanged(G04_BlockManager sender) {
         var selectedBlocks = sender.GetSelectedCombinedBlocks;
         if (selectedBlocks.Count == 0) {
-            _block1Text.text = "Block #1 Info";
-            _block2Text.text = "Block #2 Info";
+            _block1Text.text = "Item #1 Info";
+            _block2Text.text = "Item #2 Info";
             return;
         }
         
@@ -39,7 +39,7 @@ public class G04_UI : MonoBehaviour
             var block = selectedBlocks[0];
 
             string blockInfo = 
-                $"Block #1 Info\n" +
+                $"Item #1 Info\n" +
                 $"Tier: {block.GetBlockTier}\n" +
                 $"Type: {block.GetBlockType}\n" +
                 $"Size: {block.GetBlockSize}\n" +
@@ -56,7 +56,7 @@ public class G04_UI : MonoBehaviour
             var block = selectedBlocks[1];
 
             string blockInfo = 
-                $"Block #2 Info\n" +
+                $"Item #2 Info\n" +
                 $"Tier: {block.GetBlockTier}\n" +
                 $"Type: {block.GetBlockType}\n" +
                 $"Size: {block.GetBlockSize}\n" +
@@ -68,15 +68,15 @@ public class G04_UI : MonoBehaviour
             
             _block2Text.text = blockInfo;
         } else {
-            _block2Text.text = "Block #2 Info";
+            _block2Text.text = "Item #2 Info";
         }
     }
 
     private void G04_GameManager_OnStateChanged(G04_GameManager sender) {
-        var scoreText = "Total Score: " + Mathf.FloorToInt(sender.GetTotalScore).ToString();
+        var scoreText = "Total Value: " + Mathf.FloorToInt(sender.GetTotalScore).ToString();
         _scoreText.text = scoreText;       
 
-        var goalText = "Goal Score: " + sender.GetGoalScore.ToString();
+        var goalText = "Goal Value: " + sender.GetGoalScore.ToString();
         _goalText.text = goalText;
 
         var turnText = "Turns Left: " + sender.GetRemainingTurns.ToString();
@@ -85,7 +85,7 @@ public class G04_UI : MonoBehaviour
         var combinesText = "Combines Left (turn): " + sender.GetRemainingCombines.ToString();
         _combinesText.text = combinesText;
 
-        var blocksText = "Blocks Left (turn): " + G04_GameManager.Instance.GetRemainingBlocks.ToString();
+        var blocksText = "Items Left (turn): " + G04_GameManager.Instance.GetRemainingBlocks.ToString();
         _blocksText.text = blocksText; 
     }
 

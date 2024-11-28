@@ -159,7 +159,7 @@ public class G04_BlockManager : MonoBehaviour
 
             if(_grid.CheckCombinedBlocksAdjacent(combinedBlock1, combinedBlock2)) {
                 if (combinedBlock1.GetBlockTier != combinedBlock2.GetBlockTier) {
-                    GameLog.Instance.UpdateLog("Can't combine. Block tiers don't match.");
+                    GameLog.Instance.UpdateLog("Can't combine. Item tiers don't match.");
                     return;
                 }
 
@@ -223,10 +223,10 @@ public class G04_BlockManager : MonoBehaviour
                 OnBlockCombined?.Invoke(this);
 
             } else {
-                GameLog.Instance.UpdateLog("Selected blocks are not adjacent.");
+                GameLog.Instance.UpdateLog("Selected items are not adjacent.");
             }
         } else {
-            GameLog.Instance.UpdateLog(_maxSelectedCombinedBlocks + " blocks need to be selected.");
+            GameLog.Instance.UpdateLog(_maxSelectedCombinedBlocks + " items need to be selected.");
         }
     }
 

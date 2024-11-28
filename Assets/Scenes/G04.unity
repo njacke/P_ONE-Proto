@@ -496,7 +496,7 @@ GameObject:
   - component: {fileID: 591516357}
   - component: {fileID: 591516356}
   m_Layer: 5
-  m_Name: New Block Text
+  m_Name: Next Block Text
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -541,7 +541,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: New Block
+  m_text: New Item
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1007,15 +1007,15 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Blue: Add level * 50 Bonus Value to adjacent blocks.
+  m_text: 'Blue: Add level * 50 Bonus Value to adjacent items.
 
     Red: Add level
-    * .05 Multiplier to adjacent blocks.
+    * .05 Multiplier to adjacent items.
 
     Yellow: Add level * .25  of adjacent
-    blocks'' Base Value
+    items'' Base Value
 
-    to this block as Bonus Value.
+    to this item as Bonus Value.
 
     Green: Blue effect
     + Yellow effect.
@@ -1159,7 +1159,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Block #2 Info
+  m_text: 'Item #2 Info
 
     Tier: One
 
@@ -1167,17 +1167,16 @@ MonoBehaviour:
 
     Size: 3
 
-    Level:
-    3
+    Level: 3
 
-    Base Value: 100
+    Base
+    Value: 100
 
     Bonus Value: 200
 
     Multiplier: 1.2
 
-    Total
-    Value: 300'
+    Total Value: 300'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1311,7 +1310,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Blocks Left: 3'
+  m_text: 'Items Left: 3'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1445,7 +1444,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Goal Score: 10000'
+  m_text: 'Goal Value: 10000'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1775,7 +1774,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Total Score: 1000'
+  m_text: 'Total Value: 1000'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -2303,7 +2302,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Block #1 Info
+  m_text: 'Item #1 Info
 
     Tier: One
 
@@ -2311,17 +2310,16 @@ MonoBehaviour:
 
     Size: 3
 
-    Level:
-    3
+    Level: 3
 
-    Base Value: 100
+    Base
+    Value: 100
 
     Bonus Value: 200
 
     Multiplier: 1.2
 
-    Total
-    Value: 300'
+    Total Value: 300'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -2455,7 +2453,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Block Effects
+  m_text: Item Effects
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
