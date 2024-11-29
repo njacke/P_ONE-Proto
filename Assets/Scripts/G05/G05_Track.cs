@@ -2,23 +2,42 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class G05_Track : MonoBehaviour
 {
     public G05_Field[] TrackFields { get; private set; }
-    private Dictionary<Vector3, G05_Field> _posFieldDict;
+    public Dictionary<Vector3, G05_Field> _posFieldDict;
 
     private void Start() {
         TrackFields = FindObjectsOfType<G05_Field>();
+
         _posFieldDict = new Dictionary<Vector3, G05_Field>();
+
         foreach (var field in TrackFields) {
-            _posFieldDict.Add(field.transform.position, field);
+            _posFieldDict.Add(field.transform.position, field);            
         }
 
         foreach (var field in TrackFields) {
             field.AdjacentFields = GetAdjacentFields(field);
         }
+
+    }
+
+    public Dictionary<G05_Field, G05_Field[]> GetFieldGraph(G05_Field[] fields) {
+        Dictionary<G05_Field, G05_Field[]> graph = new();
+
+        foreach (var field in fields) {
+            if (field == null) {
+                Debug.LogError("Null field in fields array!");
+                continue;
+            }
+
+            graph[field] = field.AdjacentFields ?? Array.Empty<G05_Field>();
+        }
+
+        return graph;
     }
 
     public G05_Field[] GetAdjacentFields(G05_Field field) {
@@ -28,16 +47,18 @@ public class G05_Track : MonoBehaviour
         }
 
         Vector3[] offsets = {
-            new(1, 0, 0),  // top
-            new(-1, 0, 0), // bottom
-            new(0, 1, 0),  // right
-            new(0, -1, 0)  // left
+            Vector3.up,
+            Vector3.down,
+            Vector3.right,
+            Vector3.left,
         };
 
         List<G05_Field> adjacentFields = new();
 
         foreach (var offset in offsets) {
-            if (_posFieldDict.TryGetValue(field.transform.position + offset, out G05_Field adjField) && adjField != null) {
+            Vector3 adjPos = field.transform.position + offset;
+            _posFieldDict.TryGetValue(adjPos, out var adjField);
+            if (adjField != null) {
                 adjacentFields.Add(adjField);
             }
         }
@@ -45,32 +66,69 @@ public class G05_Track : MonoBehaviour
         return adjacentFields.ToArray();
     }
 
-    public G05_Field[] GetEligibleFields(G05_Token playerToken) {
-        var diceRoll = G05_GameManager.Instance.GetDice.CurrentValue;
-        if (diceRoll < 1) {
-            Debug.Log("Dice roll not eligible: " + diceRoll);
-            return Array.Empty<G05_Field>();
+    public G05_Field[] GetShortestPath(Dictionary<G05_Field, G05_Field[]> graph, G05_Field startField, G05_Field endField) {
+        Queue<G05_Field> queue = new();
+        Dictionary<G05_Field, G05_Field> predecessors = new();
+        HashSet<G05_Field> visited = new();
+
+        queue.Enqueue(startField);
+        visited.Add(startField);
+
+        while (queue.Count > 0) {
+            var current = queue.Dequeue();
+
+            // reconstruct the path
+            if (current == endField) {
+                List<G05_Field> path = new();
+                while (current != startField) {
+                    path.Add(current);
+                    current = predecessors[current];
+                }
+                path.Add(startField);
+                path.Reverse();
+                return path.ToArray();
+            }
+
+            // search adjacent fields
+            foreach (var adjField in graph[current]) {
+                if (!visited.Contains(adjField) && graph.ContainsKey(adjField)) {
+                    queue.Enqueue(adjField);
+                    visited.Add(adjField);
+                    predecessors[adjField] = current;
+                }
+            }
         }
+        
+        Debug.Log("No path found between start and end field.");
+        return null;
+    }
 
-        List<G05_Field> currentFields = new() {
-            playerToken.CurrentField
-        };
+    public G05_Field[] GetFieldsByDistance(Dictionary<G05_Field, G05_Field[]> graph, G05_Field startField, int distance, bool isExact, bool isForward) {
+        Queue<(G05_Field, int, int)> queue = new();  // store field, distance, lastFieldIndex
+        HashSet<G05_Field> visited = new();
+        List<G05_Field> result = new();
 
-        for (int i = 0; i < diceRoll; i++) {
-            List<G05_Field> newFields = new();
-            foreach (var field in currentFields) {
-                var adjFields = GetAdjacentFields(field);              
-                foreach (var adjField in adjFields) {
-                    if (adjField.FieldIndex > field.FieldIndex) {
-                        newFields.Add(adjField);                       
+        queue.Enqueue((startField, 0, startField.FieldIndex));
+        visited.Add(startField);
+
+        while (queue.Count > 0) {
+            var (current, dist, lastFieldIndex) = queue.Dequeue();
+
+            if (isExact && dist == distance || !isExact && dist <= distance) {
+                result.Add(current);
+            }
+
+            if (dist < distance) {
+                foreach (var adjField in graph[current]) {
+                    // if moving forward check that index is >= than previous
+                    if (!visited.Contains(adjField) && graph.ContainsKey(adjField) && (!isForward || adjField.FieldIndex >= lastFieldIndex)) {
+                        queue.Enqueue((adjField, dist + 1, adjField.FieldIndex));
+                        visited.Add(adjField);
                     }
                 }
             }
-
-            currentFields = newFields;
-            Debug.Log("Eligible fields count: " + currentFields.Count);
         }
 
-        return currentFields.ToArray();
+        return result.ToArray();
     }
 }

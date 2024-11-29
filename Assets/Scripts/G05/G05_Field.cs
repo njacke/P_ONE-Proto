@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class G05_Field : MonoBehaviour
 {
+    public FieldType GetFieldType { get { return _fieldType; } }
     public G05_Token CurrentToken { get; set; }
     public G05_Field[] AdjacentFields { get; set; }
     public int FieldIndex { get {return _fieldIndex; } }

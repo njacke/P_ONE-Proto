@@ -8,11 +8,17 @@ public class G05_BoardManager : MonoBehaviour
 {
     public static Action<G05_BoardManager> OnSelect;
     public static Action<G05_BoardManager> OnPlayerMoved;
+    public static Action<G05_BoardManager> OnEnemyTurnResolved;
 
     public G05_Token SelectedToken { get; private set; }
     public G05_Field SelectedField { get; private set; }
 
     private G05_Field[] _eligibleFields;
+    private G05_Track _track;
+
+    private void Start() {
+        _track = G05_GameManager.Instance.GetTrack;
+    }
 
     private void Update() {
         if (Input.GetMouseButtonDown(0)) {
@@ -37,8 +43,10 @@ public class G05_BoardManager : MonoBehaviour
     }
 
     private void G05_GameManager_OnTurnStateChanged(G05_GameManager sender) {
-        Debug.Log("Updating eligible fields from OnTurnStateChanged");
         UpdateEligibleFields();
+        if (sender.GetTurnState == G05_GameManager.TurnState.Enemy) {
+            ResolveEnemyTurn();
+        }
     }
 
     private void G05_BoardManager_OnPlayerMoved(G05_BoardManager sender) {
@@ -51,7 +59,6 @@ public class G05_BoardManager : MonoBehaviour
     }
 
     private void G05_BoardManager_OnSelect(G05_BoardManager sender) {
-        Debug.Log("Updating eligible fields from OnSelect");
         UpdateEligibleFields();
     }
 
@@ -60,16 +67,61 @@ public class G05_BoardManager : MonoBehaviour
             return;
         }
 
-        if (SelectedToken != null && SelectedToken.GetTokenType == G05_Token.TokenType.Player) {
-            _eligibleFields = G05_GameManager.Instance.GetTrack.GetEligibleFields(SelectedToken);
-            foreach (var field in _eligibleFields) {
-                field.ToggleEligible(true);
-            }
-        } else if (_eligibleFields != null) {
+        // cleanup
+        if (_eligibleFields != null) {
             foreach (var field in _eligibleFields) {
                 field.ToggleEligible(false);
             }
             _eligibleFields = null;
+        }
+
+        if (SelectedToken != null && SelectedToken.GetTokenType == G05_Token.TokenType.Player) {
+            if (SelectedToken.CurrentField.GetFieldType == G05_Field.FieldType.Finish) {
+                Debug.Log("Selected token has already finished");
+                return;
+            }
+
+            var fields = _track.TrackFields.Where(x => x.GetFieldType == G05_Field.FieldType.Start
+                                                    || x.GetFieldType == G05_Field.FieldType.Main
+                                                    || x.GetFieldType == G05_Field.FieldType.Finish)
+                                        .ToArray();
+            var graph = _track.GetFieldGraph(fields);
+            var diceValue = G05_GameManager.Instance.GetDice.CurrentValue;
+            var startField = SelectedToken.CurrentField;
+            if (startField.GetFieldType == G05_Field.FieldType.Start) {
+                startField = fields.FirstOrDefault(x => x.FieldIndex == 1);
+                diceValue--;
+            }
+
+            var eligibleFields = _track.GetFieldsByDistance(graph, startField, diceValue, true, true).ToList();
+
+            // additional finish fields (don't need exact move to finish)
+            var finishFields = _track.GetFieldsByDistance(graph, startField, diceValue, false, true)
+                                    .Where(x => x.GetFieldType == G05_Field.FieldType.Finish && !eligibleFields.Contains(x))
+                                    .ToList();
+
+            eligibleFields.AddRange(finishFields);;
+
+            // if any finish fields are within range add all that are empty
+            if (eligibleFields.Count(x => x.GetFieldType == G05_Field.FieldType.Finish) > 0) {
+                var allFinishFields = _track.TrackFields.Where(x => x.GetFieldType == G05_Field.FieldType.Finish);
+                foreach (var field in allFinishFields) {
+                    if (!eligibleFields.Contains(field)) {
+                        eligibleFields.Add(field);
+                    }
+                }
+            }
+
+            // remove fields occupied by player tokens
+            eligibleFields = eligibleFields.Where(x => x.CurrentToken == null || x.CurrentToken.GetTokenType != G05_Token.TokenType.Player).ToList();
+
+            _eligibleFields = eligibleFields.ToArray();
+
+            Debug.Log(_eligibleFields.Length);
+
+            foreach (var field in _eligibleFields) {
+                field.ToggleEligible(true);
+            }
         }
     }
 
@@ -158,15 +210,35 @@ public class G05_BoardManager : MonoBehaviour
         }
 
         if (fieldHit != null && _eligibleFields.Contains(fieldHit)) {
-            // z: 1f to avoid raycast detection issues
-            var newPos = new Vector3(fieldHit.transform.position.x, fieldHit.transform.position.y, 1f);
-            SelectedToken.transform.position = newPos;
-            fieldHit.CurrentToken = SelectedToken;
-            SelectedToken.CurrentField = fieldHit;
+            SelectedToken.MoveToField(fieldHit);
             OnPlayerMoved?.Invoke(this);
         } else {
             Debug.Log("Suggested move is not eligible.");
         }
+    }
+
+    private void ResolveEnemyTurn() {
+        var enemies = G05_GameManager.Instance.AllEnemies;
+
+        int lastActionsCount = int.MaxValue;
+
+        while (lastActionsCount > 0) {
+            int actionsCount = 0;
+            foreach (var enemy in enemies) {
+                if(enemy.TakeAction()) {
+                    actionsCount++;
+                };
+            }
+            lastActionsCount = actionsCount;
+        }
+
+        foreach (var enemy in enemies) {
+            enemy.ActionAvailable = true;
+            Debug.Log("Setting enemy aciton available to true");
+        }
+
+        Debug.Log("Enemy turn ended.");
+        OnEnemyTurnResolved?.Invoke(this);
     }
 
     private Vector3 GetMouseWorldPosition() {
