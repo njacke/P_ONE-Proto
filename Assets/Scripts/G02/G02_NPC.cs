@@ -25,6 +25,7 @@ public class G02_NPC : MonoBehaviour, G02_IDamageable
     public int GetStartAttackCD { get { return _currentHP; } }
     private bool _isFeared = false;
     private SpriteRenderer _spriteRenderer;
+    private Rigidbody2D _myRb;
     private Collider2D _myCollider;
     private NpcState _currentNpcState = NpcState.None;
     private int _currentHP = 0;
@@ -59,6 +60,7 @@ public class G02_NPC : MonoBehaviour, G02_IDamageable
     private void Awake() {
         _spriteRenderer = GetComponent<SpriteRenderer>();
         _myCollider = GetComponent<Collider2D>();
+        _myRb = GetComponent<Rigidbody2D>();
         UpdateHP(_startHP);
         _attackRange = _npcAttack.GetAttackRange;
         _startAttackCD = _npcAttack.GetAttackCD;
@@ -132,6 +134,7 @@ public class G02_NPC : MonoBehaviour, G02_IDamageable
     private void UpdateNpcStatus(NpcStatus newNpcStatus) {
         _currentNpcStatus = newNpcStatus;
         _npcAttack.AttackType = newNpcStatus;
+
 
         if (newNpcStatus == NpcStatus.Friendly) {
             UpdateHP(_startHP); // reset HP when revived

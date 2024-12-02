@@ -37,7 +37,6 @@ public class MainMenuUI : MonoBehaviour
     public void LoadG02OnClick() {
         MenuData.SelectedGame = MenuData.Games.G02;
         SceneManager.LoadScene("PlayMenu");
-
     }
 
     public void LoadG03OnClick() {
@@ -50,6 +49,11 @@ public class MainMenuUI : MonoBehaviour
         SceneManager.LoadScene("PlayMenu");
     }
 
+    public void LoadG05OnClick() {
+        MenuData.SelectedGame = MenuData.Games.G05;
+        SceneManager.LoadScene("PlayMenu");
+    }
+
     public static class MenuData {
         public static Games SelectedGame = Games.None;
         public enum Games {
@@ -59,7 +63,8 @@ public class MainMenuUI : MonoBehaviour
             G01_3,
             G02,
             G03,
-            G04
+            G04,
+            G05
         }
 
         public static Dictionary<Games, string> GamesScenesDict = new() {
@@ -70,16 +75,18 @@ public class MainMenuUI : MonoBehaviour
                     { Games.G02, "G02" },
                     { Games.G03, "G03" },
                     { Games.G04, "G04" },
+                    { Games.G05, "G05" },
             };
 
         public static Dictionary<Games, string> GamesNamesDict = new() {
                     { Games.None, "Main Menu" },
                     { Games.G01_1, "G01 - Thought Shaper (v1)" },
                     { Games.G01_2, "G01 - Thought Shaper (v2)" },
-                    { Games.G01_3, "G01 - Thought Shaper (v3)" },
+                    { Games.G01_3, "G01 - Thought Shaper (v2)" },
                     { Games.G02, "G02 - Nekropik" },
                     { Games.G03, "G03 - Out of Space" },
                     { Games.G04, "G04 - Inventorio" },
+                    { Games.G05, "G05 - Ludocris" },
             };
     }
 }

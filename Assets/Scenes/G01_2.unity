@@ -965,10 +965,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3
@@ -1466,7 +1466,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _entityPrefab: {fileID: 6009688533981360558, guid: 955da775bf552b140bf81591111af8b4, type: 3}
-  _startSpawnCD: 1
   _startDirChangeCD: 0.5
   _maxDirRetryCount: 100
 --- !u!1 &1969437838
@@ -1635,6 +1634,7 @@ MonoBehaviour:
   _gameVersion: 2
   _startHP: 10
   _startProjectileSpeed: 0.4
+  _startProjectileSpawnCd: 1
   _startProjectileDelay: 1
   _startTargetSpawnDelay: 1.5
   _startMinTargetTimer: 20

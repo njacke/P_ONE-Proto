@@ -34,12 +34,19 @@ public class G05_BoardManager : MonoBehaviour
         G05_BoardManager.OnSelect += G05_BoardManager_OnSelect; 
         G05_BoardManager.OnPlayerMoved += G05_BoardManager_OnPlayerMoved; 
         G05_GameManager.OnTurnStateChanged += G05_GameManager_OnTurnStateChanged;        
+        G05_UI.OnUseSelectedItems += G05_UI_OnUseSelectedItems;
     }
 
     private void OnDisable() {
         G05_BoardManager.OnSelect -= G05_BoardManager_OnSelect;        
         G05_BoardManager.OnPlayerMoved -= G05_BoardManager_OnPlayerMoved; 
         G05_GameManager.OnTurnStateChanged -= G05_GameManager_OnTurnStateChanged;        
+        G05_UI.OnUseSelectedItems -= G05_UI_OnUseSelectedItems;
+    }
+
+
+    private void G05_UI_OnUseSelectedItems() {
+        UpdateEligibleFields();
     }
 
     private void G05_GameManager_OnTurnStateChanged(G05_GameManager sender) {
@@ -86,7 +93,7 @@ public class G05_BoardManager : MonoBehaviour
                                                     || x.GetFieldType == G05_Field.FieldType.Finish)
                                         .ToArray();
             var graph = _track.GetFieldGraph(fields);
-            var diceValue = G05_GameManager.Instance.GetDice.CurrentValue;
+            var diceValue = G05_GameManager.Instance.GetDice.TotalValue;
             var startField = SelectedToken.CurrentField;
             if (startField.GetFieldType == G05_Field.FieldType.Start) {
                 startField = fields.FirstOrDefault(x => x.FieldIndex == 1);
@@ -116,8 +123,6 @@ public class G05_BoardManager : MonoBehaviour
             eligibleFields = eligibleFields.Where(x => x.CurrentToken == null || x.CurrentToken.GetTokenType != G05_Token.TokenType.Player).ToList();
 
             _eligibleFields = eligibleFields.ToArray();
-
-            Debug.Log(_eligibleFields.Length);
 
             foreach (var field in _eligibleFields) {
                 field.ToggleEligible(true);
@@ -185,6 +190,11 @@ public class G05_BoardManager : MonoBehaviour
     }
 
     private void Move() {
+        if (_eligibleFields == null) {
+            Debug.Log("No token selected or no eligible move possible.");
+            return;
+        }
+
         if (G05_GameManager.Instance.GetTurnState != G05_GameManager.TurnState.Move && SelectedToken != null) {
             Debug.Log("Roll the dice first.");
             return;
@@ -204,8 +214,9 @@ public class G05_BoardManager : MonoBehaviour
         G05_Field fieldHit = null;
 
         foreach (var hit in hits) {
-            if (hit.collider != null) {
-                    hit.collider.TryGetComponent(out fieldHit);
+            if (hit.collider != null && hit.collider.TryGetComponent(out G05_Field field)) {
+                    fieldHit = field;
+                    break;
             }
         }
 
@@ -234,7 +245,7 @@ public class G05_BoardManager : MonoBehaviour
 
         foreach (var enemy in enemies) {
             enemy.ActionAvailable = true;
-            Debug.Log("Setting enemy aciton available to true");
+            //Debug.Log("Setting enemy aciton available to true");
         }
 
         Debug.Log("Enemy turn ended.");

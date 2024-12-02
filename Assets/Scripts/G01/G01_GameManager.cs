@@ -15,7 +15,6 @@ public class G01_GameManager : Singleton<G01_GameManager>
     [SerializeField] private float _startTargetSpawnDelay = 1f;
     [SerializeField] private float _startMinTargetTimer = 20f;
     [SerializeField] private float _startMaxTargetTimer = 30f;
-
     [SerializeField] private float _adjustmentFactor = .05f;
 
     private float _currentProjectileSpeed = 0f;
@@ -57,7 +56,11 @@ public class G01_GameManager : Singleton<G01_GameManager>
     private void Update() {
         if (Input.GetKeyDown(KeyCode.Escape)) {
             SceneManager.LoadScene("PlayMenu");
-            //Application.Quit();
+        }
+
+        if (Input.GetKeyDown(KeyCode.F5)) {
+            var activeScene = SceneManager.GetActiveScene();
+            SceneManager.LoadScene(activeScene.name);
         }
     }
 
@@ -77,12 +80,20 @@ public class G01_GameManager : Singleton<G01_GameManager>
 
     private void G01_Target_OnTargetMatched(Vector3 pos) {
         _currentScore++;
-        _currentProjectileSpeed *= 1 + _adjustmentFactor;
-        _currentProjectileDelay *= 1 - _adjustmentFactor;
-        _currentTargetSpawnDelay *= 1 - _adjustmentFactor;
+
+        _currentMinTargetTimer *= 1 - _adjustmentFactor;
+        _currentMaxTargetTimer *= 1 - _adjustmentFactor;
+
+        if (_gameVersion != GameVersion.DirectionalLauncher) {
+            _currentTargetSpawnDelay *= 1 - _adjustmentFactor;
+            _currentProjectileSpeed *= 1 + _adjustmentFactor;
+        }
+
         if (_gameVersion == GameVersion.RandomLauncher) {
+            _currentProjectileDelay *= 1 - _adjustmentFactor;
             _currentProjectileSpawnCd *= 1 - _adjustmentFactor;
         }
+
         OnGameStateChanged?.Invoke();
     }
 
