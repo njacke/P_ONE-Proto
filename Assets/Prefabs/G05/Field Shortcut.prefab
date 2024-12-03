@@ -10,15 +10,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2320635667706965695, guid: d19195e11403eff48994f486399453a2, type: 3}
       propertyPath: m_Color.b
-      value: 0.5932395
+      value: 0.5471698
       objectReference: {fileID: 0}
     - target: {fileID: 2320635667706965695, guid: d19195e11403eff48994f486399453a2, type: 3}
       propertyPath: m_Color.g
-      value: 0.8018868
+      value: 0.4000534
       objectReference: {fileID: 0}
     - target: {fileID: 2320635667706965695, guid: d19195e11403eff48994f486399453a2, type: 3}
       propertyPath: m_Color.r
-      value: 0.38203096
+      value: 0.46230656
       objectReference: {fileID: 0}
     - target: {fileID: 3060488633105457280, guid: d19195e11403eff48994f486399453a2, type: 3}
       propertyPath: m_LocalPosition.x
@@ -62,23 +62,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5619782424090648140, guid: d19195e11403eff48994f486399453a2, type: 3}
       propertyPath: _fieldInfo
-      value: This is a finishing tile. Your tokens are safe here.
+      value: Swamp slows down your movement. (Bonus Value -1)
       objectReference: {fileID: 0}
     - target: {fileID: 5619782424090648140, guid: d19195e11403eff48994f486399453a2, type: 3}
       propertyPath: _fieldName
-      value: Finish Tile
+      value: Shortcut Tile
       objectReference: {fileID: 0}
     - target: {fileID: 5619782424090648140, guid: d19195e11403eff48994f486399453a2, type: 3}
       propertyPath: _fieldType
-      value: 2
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 5619782424090648140, guid: d19195e11403eff48994f486399453a2, type: 3}
-      propertyPath: _fieldIndex
-      value: 1000
+      propertyPath: _fieldSpeed
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8376831132756289526, guid: d19195e11403eff48994f486399453a2, type: 3}
       propertyPath: m_Name
-      value: Field Finish
+      value: Field Shortcut
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -7,8 +7,10 @@ using UnityEngine;
 public class G05_Dice : MonoBehaviour
 {
     public static Action<G05_Dice> OnValueUpdated;
+    public static Action<G05_Dice> OnDiceRoll;
     public int BaseValue { get ; private set; }
     public int BonusValue { get ; private set; }
+    public int SpecialValue { get ; private set; } // player token specials & field speed
     public int BaseMulti { get ; private set; }
     public int TotalValue { get { return CalculateTotalValue(); } }
     [SerializeField] private int _size = 6;
@@ -18,7 +20,7 @@ public class G05_Dice : MonoBehaviour
     }
 
     private void OnDisable() {
-        G05_UI.OnDiceRoll -= G05_UI_OnDiceRoll;        
+        G05_UI.OnDiceRoll -= G05_UI_OnDiceRoll;     
     }
 
     private void G05_UI_OnDiceRoll() {
@@ -28,6 +30,7 @@ public class G05_Dice : MonoBehaviour
     public void RollDice() {
         BaseValue = UnityEngine.Random.Range(1, _size + 1);
         BonusValue = 0;
+        SpecialValue = 0;
 
         Debug.Log("Base multi pre-roll: " + BaseMulti);
 
@@ -36,6 +39,7 @@ public class G05_Dice : MonoBehaviour
             BaseMulti = 0;
         }
 
+        OnDiceRoll?.Invoke(this);
         OnValueUpdated?.Invoke(this);
     }
 
@@ -51,12 +55,17 @@ public class G05_Dice : MonoBehaviour
         OnValueUpdated?.Invoke(this);
     }
 
+    public void UpdateSpecialValue(int value) {
+        SpecialValue = value;
+        OnValueUpdated?.Invoke(this);
+    }
+
     public void AddBaseMulti(int value) {
         BaseMulti += value;
     }
 
     private int CalculateTotalValue() {
-        var totalValue = BaseValue + BonusValue;
+        var totalValue = BaseValue + BonusValue + SpecialValue;
         if (totalValue < 1) {
             totalValue = 1;
         }

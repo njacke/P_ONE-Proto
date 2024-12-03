@@ -64,7 +64,7 @@ public class G05_UI : MonoBehaviour
 
     private void G05_Dice_OnValueUpdated(G05_Dice sender) {
         _baseDiceValue.text = sender.BaseValue.ToString();
-        _bonusDiceValue.text = sender.BonusValue.ToString();
+        _bonusDiceValue.text = (sender.BonusValue + sender.SpecialValue).ToString(); // combined in display
         _totalDiceValue.text = sender.TotalValue.ToString();
     }
 

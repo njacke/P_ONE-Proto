@@ -241,6 +241,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b7174b67c1379540a66c8b7a966834d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _fieldName: 
+  _fieldInfo: 
   _fieldIndex: 0
+  _fieldSpeed: 0
   _fieldType: 0
   _outlineSpriteRenderer: {fileID: 7129328552819989004}

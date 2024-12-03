@@ -10,7 +10,7 @@ public class G05_Track : MonoBehaviour
     public G05_Field[] TrackFields { get; private set; }
     public Dictionary<Vector3, G05_Field> _posFieldDict;
 
-    private void Start() {
+    private void Awake() {
         TrackFields = FindObjectsOfType<G05_Field>();
 
         _posFieldDict = new Dictionary<Vector3, G05_Field>();
@@ -103,12 +103,12 @@ public class G05_Track : MonoBehaviour
         return null;
     }
 
-    public G05_Field[] GetFieldsByDistance(Dictionary<G05_Field, G05_Field[]> graph, G05_Field startField, int distance, bool isExact, bool isForward) {
+    public G05_Field[] GetFieldsByDistance(Dictionary<G05_Field, G05_Field[]> graph, G05_Field startField, int distance, bool isExact, bool isForward, bool ignoreShortcuts) {
         Queue<(G05_Field, int, int)> queue = new();  // store field, distance, lastFieldIndex
         HashSet<G05_Field> visited = new();
         List<G05_Field> result = new();
 
-        queue.Enqueue((startField, 0, startField.FieldIndex));
+        queue.Enqueue((startField, 0, startField.GetFieldIndex));
         visited.Add(startField);
 
         while (queue.Count > 0) {
@@ -119,11 +119,25 @@ public class G05_Track : MonoBehaviour
             }
 
             if (dist < distance) {
-                foreach (var adjField in graph[current]) {
+                foreach (var adjField in graph[current]) {                    
+                    // do shortcut check if needed
+                    bool shortcutCheck = true;
+                    if (!ignoreShortcuts) {
+                        if (current.GetFieldType == G05_Field.FieldType.Main && adjField.GetFieldType == G05_Field.FieldType.Shortcut &&
+                            !adjField.IsShortcutEnabled && adjField.GetFieldIndex >= lastFieldIndex) {
+                            shortcutCheck = false;
+                        } else if (current.GetFieldType == G05_Field.FieldType.Shortcut && adjField.GetFieldType == G05_Field.FieldType.Main &&
+                            !adjField.IsShortcutEnabled && adjField.GetFieldIndex <= lastFieldIndex) {
+                            shortcutCheck = false;
+                        }
+                    }
+
                     // if moving forward check that index is >= than previous
-                    if (!visited.Contains(adjField) && graph.ContainsKey(adjField) && (!isForward || adjField.FieldIndex >= lastFieldIndex)) {
-                        queue.Enqueue((adjField, dist + 1, adjField.FieldIndex));
-                        visited.Add(adjField);
+                    if (!visited.Contains(adjField) && graph.ContainsKey(adjField) &&
+                            (!isForward || adjField.GetFieldIndex >= lastFieldIndex) && shortcutCheck) {
+
+                        queue.Enqueue((adjField, dist + 1, adjField.GetFieldIndex));
+                        visited.Add(adjField);                        
                     }
                 }
             }

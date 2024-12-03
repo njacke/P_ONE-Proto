@@ -9,20 +9,23 @@ public class G05_GameManager : Singleton<G05_GameManager>
     public static Action<G05_GameManager> OnTurnStateChanged;
     public static Action<G05_ItemEffect> OnNewItemCreated;
 
-    public HashSet<G05_Token> AllPlayers { get; private set; }
+    public HashSet<G05_Player> AllPlayers { get; private set; }
     public HashSet<G05_Enemy> AllEnemies { get; private set; }
     public G05_Dice GetDice { get { return _dice; } }
     public G05_Track GetTrack { get { return _track; } }
     public G05_ItemManager GetItemManager { get { return _itemManager; } }
     public TurnState GetTurnState { get { return _currentTurnState; } }
     public int GetMaxItems { get { return _maxItems; } }
+    public int GetCurrentTurnCount { get { return _currentTurnCount; } }
+
     [SerializeField] private G05_Dice _dice;
     [SerializeField] private G05_Track _track;
     [SerializeField] private G05_ItemManager _itemManager;
     [SerializeField] private int _maxItems = 5;
-    private Type[] _allEffectTypes;
 
+    private Type[] _allEffectTypes;
     private TurnState _currentTurnState;
+    private int _currentTurnCount = 1;
 
     public enum TurnState {
         None,
@@ -34,7 +37,7 @@ public class G05_GameManager : Singleton<G05_GameManager>
     protected override void Awake() {
         base.Awake();
         _currentTurnState = TurnState.Roll;
-        AllPlayers = new HashSet<G05_Token>();
+        AllPlayers = new HashSet<G05_Player>();
         AllEnemies = new HashSet<G05_Enemy>();
 
         // add all effect types
@@ -43,7 +46,6 @@ public class G05_GameManager : Singleton<G05_GameManager>
             typeof(G05_IE_RollValue),
             typeof(G05_IE_RollMulti)
         };
-
     }
 
     private void Update() {
@@ -58,7 +60,7 @@ public class G05_GameManager : Singleton<G05_GameManager>
     }
 
     private void OnEnable() {
-        G05_Dice.OnValueUpdated += G05_Dice_OnValueUpdated;        
+        G05_Dice.OnDiceRoll += G05_Dice_OnDiceRoll;        
         G05_BoardManager.OnPlayerMoved += G05_BoardManager_OnPlayerMoved;
         G05_BoardManager.OnEnemyTurnResolved += G05_BoardManager_OnEnemyTurnResolved;
         G05_TokenSpawner.OnEnemySpawned += G05_TokenSpawner_OnEnemySpawned;
@@ -69,7 +71,7 @@ public class G05_GameManager : Singleton<G05_GameManager>
     }
 
     private void OnDisable() {
-        G05_Dice.OnValueUpdated -= G05_Dice_OnValueUpdated;        
+        G05_Dice.OnDiceRoll -= G05_Dice_OnDiceRoll;        
         G05_BoardManager.OnPlayerMoved -= G05_BoardManager_OnPlayerMoved;        
         G05_BoardManager.OnEnemyTurnResolved -= G05_BoardManager_OnEnemyTurnResolved;
         G05_TokenSpawner.OnEnemySpawned -= G05_TokenSpawner_OnEnemySpawned;
@@ -79,16 +81,26 @@ public class G05_GameManager : Singleton<G05_GameManager>
     }
 
     private void G05_UI_OnItemInitDone() {
-        for (int i = 0; i < 3; i++) {
-            CreateNewItem();
+        // hardcoded hoarder skill for prototype (start with +3 items)
+        foreach (var player in AllPlayers) {
+            if (player.GetPlayerType == G05_Player.PlayerType.Hoarder) {
+                for (int i = 0; i < 3; i++) {
+                    CreateNewItem();
+                }
+            }
         }
     }
 
     private void G05_Token_OnTokenKill(G05_Token tokenKilled) {
         if (tokenKilled.GetTokenType == G05_Token.TokenType.Player) {
-            AllPlayers.Remove(tokenKilled);
-            Debug.Log(tokenKilled.gameObject.name + " was killed.");
-            Destroy(tokenKilled.gameObject);
+            var player = tokenKilled.GetComponent<G05_Player>();
+            if (player != null) {
+                AllPlayers.Remove(player);
+                Debug.Log(tokenKilled.gameObject.name + " was killed.");
+                Destroy(tokenKilled.gameObject);
+            } else {
+                Debug.Log("Player component not found. " + tokenKilled.gameObject.name + " was not killed.");
+            }
 
         } else if (tokenKilled.GetTokenType == G05_Token.TokenType.Enemy) {
             var enemy = tokenKilled.GetComponent<G05_Enemy>();
@@ -96,14 +108,14 @@ public class G05_GameManager : Singleton<G05_GameManager>
                 AllEnemies.Remove(tokenKilled.GetComponent<G05_Enemy>());
                 Debug.Log(tokenKilled.gameObject.name + " was killed.");
                 Destroy(enemy.gameObject);
-                CreateNewItem();
+                CreateNewItem(); // loot drop
             } else {
                 Debug.Log("Enemy component not found. " + tokenKilled.gameObject.name + " was not killed.");
             }
         }
     }
 
-    private void G05_TokenSpawner_OnPlayerSpawned(G05_Token player) {
+    private void G05_TokenSpawner_OnPlayerSpawned(G05_Player player) {
         AllPlayers.Add(player);
     }
 
@@ -111,7 +123,7 @@ public class G05_GameManager : Singleton<G05_GameManager>
         AllEnemies.Add(enemy);
     }
 
-    private void G05_Dice_OnValueUpdated(G05_Dice sender) {
+    private void G05_Dice_OnDiceRoll(G05_Dice sender) {
         _currentTurnState = TurnState.Move;
         OnTurnStateChanged?.Invoke(this);
     }
@@ -122,8 +134,32 @@ public class G05_GameManager : Singleton<G05_GameManager>
     }
 
     private void G05_BoardManager_OnEnemyTurnResolved(G05_BoardManager sender) {
-        _currentTurnState = TurnState.Roll;
-        OnTurnStateChanged?.Invoke(this);        
+        bool isFinished = true;
+        int playersFinished = 0;
+
+        foreach (var player in AllPlayers) {
+            if (player != null) {
+                if (player.CurrentField.GetFieldType == G05_Field.FieldType.Finish) {
+                playersFinished++;
+                } else {
+                    isFinished = false;
+                }
+            }
+        }
+
+        if (isFinished) {
+            if (playersFinished > 0 ) {
+                Debug.Log("Player won with " + playersFinished + " tokens in " + _currentTurnCount + " turns.");
+            } else {
+                Debug.Log("Player lost.");
+            }
+            var activeScene = SceneManager.GetActiveScene();
+            SceneManager.LoadScene(activeScene.name);
+        } else {
+            _currentTurnCount++;
+            _currentTurnState = TurnState.Roll;
+            OnTurnStateChanged?.Invoke(this);
+        }
     }
 
     private G05_ItemEffect GetNewItemEffect() {
@@ -135,7 +171,7 @@ public class G05_GameManager : Singleton<G05_GameManager>
         return newItem;
     }
 
-    private void CreateNewItem() {
+    public void CreateNewItem() {
             var newEffect = GetNewItemEffect();
             OnNewItemCreated?.Invoke(newEffect);
     }

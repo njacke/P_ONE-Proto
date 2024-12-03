@@ -67,40 +67,40 @@ MonoBehaviour:
       m_Calls: []
   m_text: 'GOAL
 
-    Support your troops with bombs to help them destroy enemy objectives.
+    Navigate around the map and support your troops with bombs to
+    help them destroy enemy objectives.
 
 
     CONTROLS
 
-    WASD
-    - movement
+    WASD - movement
 
-    QE - distribute bomb charges (raduis/power)
+    QE
+    - distribute bomb charges (raduis/power)
 
-    SPACE - drop
-    bomb
+    SPACE - drop bomb
 
 
     RULES
 
-    Bomb effects: affect both hostile and friendly units.
+    Bomb
+    effects: affect both hostile and friendly units.
 
 
-    BOMB
-    EFFECTS
+    BOMB EFFECTS
 
-    Instant Health: +1 HP to each unit in bomb radius; +1 power -> +1
-    additional HP
+    Instant
+    Health: +1 HP to each unit in bomb radius; +1 power -> +1 additional HP
 
-    Instant damage: 1 dmg to each unit in bomb radius; +1 power
-    -> +1 additional dmg
+    Instant
+    damage: 1 dmg to each unit in bomb radius; +1 power -> +1 additional dmg
 
-    Speed Buff: +speed for 5 secs to each unit in bomb
-    radius; +1 power -> higher speed increase
+    Speed
+    Buff: +speed for 5 secs to each unit in bomb radius; +1 power -> higher speed
+    increase
 
-    Attack Buff: reset attack CD +
-    decrease attack CD for 5 secs to each unit in bomb radius -> +1 power -> lower
-    attack CD'
+    Attack Buff: reset attack CD + decrease attack CD for 5 secs to
+    each unit in bomb radius -> +1 power -> lower attack CD'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
