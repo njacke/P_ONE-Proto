@@ -48,7 +48,7 @@ public class G05_Item_UI : MonoBehaviour, IPointerClickHandler
         ToggleSelected(false);        
         _mainImage.color = Color.white;
         _nameText.text = effect.EffectName;
-        _valueText.text = effect.EffectValue.ToString();
+        _valueText.text = effect.EffectValueText;
 
         string typeText = effect.EffectCategory switch {
             G05_ItemEffect.EffectCat.PreRoll => "[Pre-roll]",
@@ -71,17 +71,17 @@ public class G05_Item_UI : MonoBehaviour, IPointerClickHandler
  
     public void OnPointerClick(PointerEventData eventData) {
         if (IsEmpty) {
-            Debug.Log("No item to select.");
+            G05_GameManager.Instance.GetGameLog.UpdateLog("No item to select.");
             return;
         }
 
         if (Effect.EffectCategory == G05_ItemEffect.EffectCat.PreRoll && G05_GameManager.Instance.GetTurnState != G05_GameManager.TurnState.Roll) {
-            Debug.Log("Can't select post-roll.");
+            G05_GameManager.Instance.GetGameLog.UpdateLog("Can't select post-roll.");
             return;
         }
 
         if (Effect.EffectCategory == G05_ItemEffect.EffectCat.PostRoll && G05_GameManager.Instance.GetTurnState != G05_GameManager.TurnState.Move) {
-            Debug.Log("Can't select pre-roll.");
+            G05_GameManager.Instance.GetGameLog.UpdateLog("Can't select pre-roll.");
             return;
         }
 

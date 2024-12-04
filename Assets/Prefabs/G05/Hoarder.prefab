@@ -66,7 +66,8 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7665693880698738156, guid: 8630409e93b0b4140a425d7bb1540a92, type: 3}
       propertyPath: _tokenInfo
-      value: Start the game with 3 additional items.
+      value: Start the game with 3 additional items. Gain 1 additional loot in treasure
+        chests.
       objectReference: {fileID: 0}
     - target: {fileID: 7665693880698738156, guid: 8630409e93b0b4140a425d7bb1540a92, type: 3}
       propertyPath: _tokenName

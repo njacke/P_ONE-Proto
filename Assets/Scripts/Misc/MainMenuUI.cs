@@ -86,7 +86,7 @@ public class MainMenuUI : MonoBehaviour
                     { Games.G02, "G02 - Nekropik" },
                     { Games.G03, "G03 - Out of Space" },
                     { Games.G04, "G04 - Inventorio" },
-                    { Games.G05, "G05 - Ludocris" },
+                    { Games.G05, "G05 - Ludocrous" },
             };
     }
 }

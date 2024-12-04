@@ -381,6 +381,7 @@ MonoBehaviour:
   _G02_info: {fileID: 6530701375843933165, guid: b9854aa80e9637949a3130c599deed17, type: 3}
   _G03_info: {fileID: 7337075278235142279, guid: 9b065aaf9ad6a0d4d8481d62555d40be, type: 3}
   _G04_info: {fileID: 2680158136567866170, guid: 0217fc54cf1e3c14a9466836ceb3f2b9, type: 3}
+  _G05_info: {fileID: 3503876514078773104, guid: 6cf644af419a944468af3564a749679d, type: 3}
 --- !u!1 &1189711641
 GameObject:
   m_ObjectHideFlags: 0

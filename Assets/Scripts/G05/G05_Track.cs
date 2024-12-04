@@ -66,7 +66,7 @@ public class G05_Track : MonoBehaviour
         return adjacentFields.ToArray();
     }
 
-    public G05_Field[] GetShortestPath(Dictionary<G05_Field, G05_Field[]> graph, G05_Field startField, G05_Field endField) {
+    public G05_Field[] GetShortestPath(Dictionary<G05_Field, G05_Field[]> graph, G05_Field startField, G05_Field endField, bool ignoreGates) {
         Queue<G05_Field> queue = new();
         Dictionary<G05_Field, G05_Field> predecessors = new();
         HashSet<G05_Field> visited = new();
@@ -77,7 +77,7 @@ public class G05_Track : MonoBehaviour
         while (queue.Count > 0) {
             var current = queue.Dequeue();
 
-            // reconstruct the path
+            // reconstruct path when target is reached
             if (current == endField) {
                 List<G05_Field> path = new();
                 while (current != startField) {
@@ -89,8 +89,14 @@ public class G05_Track : MonoBehaviour
                 return path.ToArray();
             }
 
-            // search adjacent fields
+            // check adjacent fields
             foreach (var adjField in graph[current]) {
+                // gate check
+                if (!ignoreGates && adjField.IsGated && current.IsGated) {
+                    continue;
+                }
+
+                // other constraints check
                 if (!visited.Contains(adjField) && graph.ContainsKey(adjField)) {
                     queue.Enqueue(adjField);
                     visited.Add(adjField);
@@ -98,46 +104,76 @@ public class G05_Track : MonoBehaviour
                 }
             }
         }
-        
-        Debug.Log("No path found between start and end field.");
-        return null;
+
+        // return an empty array if no path found
+        return Array.Empty<G05_Field>();
     }
 
-    public G05_Field[] GetFieldsByDistance(Dictionary<G05_Field, G05_Field[]> graph, G05_Field startField, int distance, bool isExact, bool isForward, bool ignoreShortcuts) {
-        Queue<(G05_Field, int, int)> queue = new();  // store field, distance, lastFieldIndex
-        HashSet<G05_Field> visited = new();
+    public G05_Field[] GetFieldsByDistance(Dictionary<G05_Field, G05_Field[]> graph, G05_Field startField, int distance, bool isExact, bool isForwardOnly, bool ignoreGates) {
+        Queue<(G05_Field current, G05_Field previous, int dist)> queue = new(); // store (current field, previous field, distance)
+        HashSet<(G05_Field, int)> visited = new(); // track visited (field, distance) combinations
         List<G05_Field> result = new();
 
-        queue.Enqueue((startField, 0, startField.GetFieldIndex));
-        visited.Add(startField);
+        queue.Enqueue((startField, null, 0)); // start with no previous field
+        visited.Add((startField, 0));
 
         while (queue.Count > 0) {
-            var (current, dist, lastFieldIndex) = queue.Dequeue();
+            var (current, previous, dist) = queue.Dequeue();
 
-            if (isExact && dist == distance || !isExact && dist <= distance) {
+            // add to result if the distance matches criteria
+            if ((isExact && dist == distance) || (!isExact && dist <= distance)) {
                 result.Add(current);
             }
 
             if (dist < distance) {
-                foreach (var adjField in graph[current]) {                    
-                    // do shortcut check if needed
-                    bool shortcutCheck = true;
-                    if (!ignoreShortcuts) {
-                        if (current.GetFieldType == G05_Field.FieldType.Main && adjField.GetFieldType == G05_Field.FieldType.Shortcut &&
-                            !adjField.IsShortcutEnabled && adjField.GetFieldIndex >= lastFieldIndex) {
-                            shortcutCheck = false;
-                        } else if (current.GetFieldType == G05_Field.FieldType.Shortcut && adjField.GetFieldType == G05_Field.FieldType.Main &&
-                            !adjField.IsShortcutEnabled && adjField.GetFieldIndex <= lastFieldIndex) {
-                            shortcutCheck = false;
+                foreach (var adjField in graph[current]) {
+                    // skip if moving back to the previous field
+                    if (adjField == previous) {
+                        continue;
+                    }
+
+                    bool isValidMove = true;
+
+                    // direction check
+                    if (isForwardOnly) {
+                        // only move to higher index
+                        isValidMove = adjField.GetFieldIndex > current.GetFieldIndex;
+                    } else {
+                        bool isMovingForward = adjField.GetFieldIndex > current.GetFieldIndex;
+                        bool isMovingBackward = adjField.GetFieldIndex < current.GetFieldIndex;
+
+                        //consistent direction check
+                        if (previous != null) {
+                            bool wasMovingForward = previous.GetFieldIndex < current.GetFieldIndex;
+                            bool wasMovingBackward = previous.GetFieldIndex > current.GetFieldIndex;
+
+                            if (isMovingForward && !wasMovingForward) {
+                                isValidMove = false;
+                            } else if (isMovingBackward && !wasMovingBackward) {
+                                isValidMove = false;
+                            }
                         }
                     }
 
-                    // if moving forward check that index is >= than previous
-                    if (!visited.Contains(adjField) && graph.ContainsKey(adjField) &&
-                            (!isForward || adjField.GetFieldIndex >= lastFieldIndex) && shortcutCheck) {
+                    // gate check
+                    if (!ignoreGates && current.IsGated && adjField.IsGated) {
+                        isValidMove = false;
+                    }
+                    
+                    // graph key check
+                    if (!graph.ContainsKey(adjField)) {
+                        isValidMove = false;
+                    }
 
-                        queue.Enqueue((adjField, dist + 1, adjField.GetFieldIndex));
-                        visited.Add(adjField);                        
+                    // visited check at this distance
+                    if (visited.Contains((adjField, dist + 1))) {
+                        isValidMove = false;
+                    }
+
+                    // check all conditions before enqueuing
+                    if (isValidMove) {
+                        queue.Enqueue((adjField, current, dist + 1));
+                        visited.Add((adjField, dist + 1));                        
                     }
                 }
             }

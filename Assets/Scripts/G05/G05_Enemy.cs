@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class G05_Enemy : G05_Token
@@ -65,41 +64,25 @@ public class G05_Enemy : G05_Token
             if (_enemyType == EnemyType.Walker) {
                 foreach (var player in players) {
                     if (player.CurrentField.GetFieldType == G05_Field.FieldType.Main) {
-                        var path = _track.GetShortestPath(graph, CurrentField, player.CurrentField);
+                        var path = _track.GetShortestPath(graph, CurrentField, player.CurrentField, false);
+                        Debug.Log("Path distance to: " + player.gameObject.name + " is " + path.Length);
                         if (path.Length < closestPathDist) {
                             closestPath = path;
+                            closestPathDist = path.Length;
                         }                    
                     }
                 }
             }
 
-
-            if (closestPath == null || closestPath.Length < moveDistance) {
-                //Debug.Log("Moving to random target by exact distance.");
-                var eligibleFields = _track.GetFieldsByDistance(graph, CurrentField, moveDistance, true, false, true);
-                int rndIndex = UnityEngine.Random.Range(0, eligibleFields.Length);
-                var targetField = eligibleFields[rndIndex];
-                
-                if (targetField.CurrentToken != null && targetField.CurrentToken.GetTokenType == TokenType.Enemy) {
-                    //Debug.Log("Invalid move; field is occupied by an enemy");
-                    return false;
-                }
-
-                if (targetField != null) {
-                    MoveToField(targetField);
-                    ActionAvailable = false;
-                    return true;
-                }
-
-                //Debug.Log("No target field found.");
-                return false;
-
+            if (closestPath == null) {
+                return MoveToRandomField(graph, moveDistance);
             } else {
+                Debug.Log("Moving to player target.");
                 var targetField = closestPath[moveDistance]; // index 0 is starting field
 
                 if (targetField.CurrentToken != null && targetField.CurrentToken.GetTokenType == TokenType.Enemy) {
                     //Debug.Log("Invalid move; field is occupied by an enemy");
-                    return false;
+                    return MoveToRandomField(graph, moveDistance);
                 }
                 
                 MoveToField(targetField);
@@ -109,4 +92,24 @@ public class G05_Enemy : G05_Token
         }
     }
 
+    private bool MoveToRandomField(Dictionary<G05_Field, G05_Field[]> graph, int moveDistance) {
+            Debug.Log("Moving to random field by exact distance.");
+            var eligibleFields = _track.GetFieldsByDistance(graph, CurrentField, moveDistance, true, false, false);
+            int rndIndex = UnityEngine.Random.Range(0, eligibleFields.Length);
+            var targetField = eligibleFields[rndIndex];
+            
+            if (targetField.CurrentToken != null && targetField.CurrentToken.GetTokenType == TokenType.Enemy) {
+                //Debug.Log("Invalid move; field is occupied by an enemy");
+                return false;
+            }
+
+            if (targetField != null) {
+                MoveToField(targetField);
+                ActionAvailable = false;
+                return true;
+            }
+
+            //Debug.Log("No target field found.");
+            return false;        
+    }
 }

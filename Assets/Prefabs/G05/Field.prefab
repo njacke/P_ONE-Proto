@@ -246,4 +246,6 @@ MonoBehaviour:
   _fieldIndex: 0
   _fieldSpeed: 0
   _fieldType: 0
+  _isGated: 0
+  _gateIndex: -1
   _outlineSpriteRenderer: {fileID: 7129328552819989004}

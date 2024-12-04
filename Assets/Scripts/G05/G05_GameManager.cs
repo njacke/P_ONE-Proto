@@ -7,21 +7,23 @@ using UnityEngine.SceneManagement;
 public class G05_GameManager : Singleton<G05_GameManager>
 {
     public static Action<G05_GameManager> OnTurnStateChanged;
+    public static Action<G05_GameManager> OnPlayerTokenDeath;
     public static Action<G05_ItemEffect> OnNewItemCreated;
 
     public HashSet<G05_Player> AllPlayers { get; private set; }
     public HashSet<G05_Enemy> AllEnemies { get; private set; }
     public G05_Dice GetDice { get { return _dice; } }
     public G05_Track GetTrack { get { return _track; } }
-    public G05_ItemManager GetItemManager { get { return _itemManager; } }
     public TurnState GetTurnState { get { return _currentTurnState; } }
     public int GetMaxItems { get { return _maxItems; } }
     public int GetCurrentTurnCount { get { return _currentTurnCount; } }
+    public int GetPlayersAliveCount { get { return CalcPlayersAlive(); } }
+    public GameLog GetGameLog { get { return _gameLog; } }
 
     [SerializeField] private G05_Dice _dice;
     [SerializeField] private G05_Track _track;
-    [SerializeField] private G05_ItemManager _itemManager;
     [SerializeField] private int _maxItems = 5;
+    [SerializeField] private GameLog _gameLog;
 
     private Type[] _allEffectTypes;
     private TurnState _currentTurnState;
@@ -44,7 +46,7 @@ public class G05_GameManager : Singleton<G05_GameManager>
         _allEffectTypes = new Type[] {
             typeof(G05_IE_AddedValue),
             typeof(G05_IE_RollValue),
-            typeof(G05_IE_RollMulti)
+            typeof(G05_IE_RollBonus)
         };
     }
 
@@ -98,6 +100,7 @@ public class G05_GameManager : Singleton<G05_GameManager>
                 AllPlayers.Remove(player);
                 Debug.Log(tokenKilled.gameObject.name + " was killed.");
                 Destroy(tokenKilled.gameObject);
+                OnPlayerTokenDeath?.Invoke(this);
             } else {
                 Debug.Log("Player component not found. " + tokenKilled.gameObject.name + " was not killed.");
             }
@@ -149,9 +152,9 @@ public class G05_GameManager : Singleton<G05_GameManager>
 
         if (isFinished) {
             if (playersFinished > 0 ) {
-                Debug.Log("Player won with " + playersFinished + " tokens in " + _currentTurnCount + " turns.");
+                _gameLog.UpdateLog("Player won with " + playersFinished + " tokens in " + _currentTurnCount + " turns.");
             } else {
-                Debug.Log("Player lost.");
+                _gameLog.UpdateLog("Player lost.");
             }
             var activeScene = SceneManager.GetActiveScene();
             SceneManager.LoadScene(activeScene.name);
@@ -174,5 +177,16 @@ public class G05_GameManager : Singleton<G05_GameManager>
     public void CreateNewItem() {
             var newEffect = GetNewItemEffect();
             OnNewItemCreated?.Invoke(newEffect);
+    }
+
+    private int CalcPlayersAlive() {
+        int count = 0;
+        foreach (var player in AllPlayers) {
+            if (player != null) {
+                count++;
+            }
+        }       
+        
+        return count;
     }
 }

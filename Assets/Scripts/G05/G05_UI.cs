@@ -17,6 +17,11 @@ public class G05_UI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _totalDiceValue;
     [SerializeField] private GameObject _itemDisplay;
     [SerializeField] private GameObject _itemPrefab;
+    [SerializeField] private TextMeshProUGUI _selectionName;
+    [SerializeField] private TextMeshProUGUI _selectionDescription;
+    [SerializeField] private TextMeshProUGUI _turnCount;
+    [SerializeField] private TextMeshProUGUI _playersCount;
+
 
     private void Awake() {
         _baseDiceValue.text = "?";
@@ -26,18 +31,49 @@ public class G05_UI : MonoBehaviour
 
     private void Start() {
         InitItemDisplay();
+        _turnCount.text = G05_GameManager.Instance.GetCurrentTurnCount.ToString();
+        _playersCount.text = G05_GameManager.Instance.GetPlayersAliveCount.ToString();
     }
 
     private void OnEnable() {
         G05_Dice.OnValueUpdated += G05_Dice_OnValueUpdated;        
         G05_BoardManager.OnPlayerMoved += G05_BoardManager_OnPlayerMoved;       
         G05_GameManager.OnNewItemCreated += G05_GameManager_OnNewItemCreated; 
+        G05_BoardManager.OnSelect += G05_BoardManager_OnSelect;
+        G05_GameManager.OnTurnStateChanged += G05_GameManager_OnTurnStateChanged;
+        G05_GameManager.OnPlayerTokenDeath += G05_GameManager_OnPlayerTokenDeath;
     }
 
     private void OnDisable() {
         G05_Dice.OnValueUpdated -= G05_Dice_OnValueUpdated;
         G05_BoardManager.OnPlayerMoved -= G05_BoardManager_OnPlayerMoved;
         G05_GameManager.OnNewItemCreated -= G05_GameManager_OnNewItemCreated; 
+        G05_BoardManager.OnSelect -= G05_BoardManager_OnSelect;
+        G05_GameManager.OnTurnStateChanged -= G05_GameManager_OnTurnStateChanged;
+        G05_GameManager.OnPlayerTokenDeath -= G05_GameManager_OnPlayerTokenDeath;
+    }
+
+    private void G05_GameManager_OnPlayerTokenDeath(G05_GameManager sender) {
+        _playersCount.text = G05_GameManager.Instance.GetPlayersAliveCount.ToString();
+    }
+
+    private void G05_GameManager_OnTurnStateChanged(G05_GameManager sender) {
+        if (sender.GetTurnState == G05_GameManager.TurnState.Roll) {
+            _turnCount.text = G05_GameManager.Instance.GetCurrentTurnCount.ToString();
+        }
+    }
+
+    private void G05_BoardManager_OnSelect(G05_BoardManager sender) {
+        if (sender.SelectedToken != null) {
+            _selectionName.text = sender.SelectedToken.GetTokenName;
+            _selectionDescription.text = sender.SelectedToken.GetTokenInfo;
+        } else if (sender.SelectedField != null) {
+            _selectionName.text = sender.SelectedField.GetFieldName;
+            _selectionDescription.text = sender.SelectedField.GetFieldInfo;
+        } else {
+            _selectionName.text = "n/a";
+            _selectionDescription.text = "";
+        }
     }
 
     private void G05_GameManager_OnNewItemCreated(G05_ItemEffect effect) {
@@ -72,7 +108,7 @@ public class G05_UI : MonoBehaviour
         EventSystem.current.SetSelectedGameObject(null);
 
         if (G05_GameManager.Instance.GetTurnState != G05_GameManager.TurnState.Roll) {
-            Debug.Log("Move player token to end turn.");
+            G05_GameManager.Instance.GetGameLog.UpdateLog("Move player token to end turn.");
         } else {
             OnDiceRoll?.Invoke();
         }

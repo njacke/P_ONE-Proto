@@ -11,15 +11,16 @@ public class G05_Field : MonoBehaviour
     public string GetFieldName { get { return _fieldName; } }
     public string GetFieldInfo { get { return _fieldInfo; } }
     public int GetFieldSpeed { get { return _fieldSpeed; } }
-    public int GetShortcutIndex { get { return _shortcutIndex; } }
-    public bool IsShortcutEnabled { get; private set; } = false;
+    public int GetGateIndex { get { return _gateIndex; } }
+    public bool IsGated { get; set; }
 
     [SerializeField] private string _fieldName;
     [SerializeField] private string _fieldInfo;
     [SerializeField] private int _fieldIndex;
     [SerializeField] private int _fieldSpeed;
     [SerializeField] private FieldType _fieldType;
-    [SerializeField] private int _shortcutIndex;
+    [SerializeField] private bool _isGated;
+    [SerializeField] private int _gateIndex;
     [SerializeField] private SpriteRenderer _outlineSpriteRenderer;
     private SpriteRenderer _spriteRenderer;
     private Color _startColor;
@@ -29,13 +30,13 @@ public class G05_Field : MonoBehaviour
         Start,
         Finish,
         Main,
-        Shortcut,
         Enemy,
     }
 
     private void Awake() {
         _spriteRenderer = GetComponent<SpriteRenderer>();
         _startColor = _spriteRenderer.color;
+        IsGated = _isGated;
     }
 
 
@@ -53,18 +54,5 @@ public class G05_Field : MonoBehaviour
         } else {
             _spriteRenderer.color = _startColor;
         }        
-    }
-
-    public void ToggleShortcut(bool isEnabled) {
-        if (_fieldType != FieldType.Shortcut) {
-            Debug.Log("Tried to enable shortcut on a field that is not a shortcut.");
-            return;
-        }
-
-        if (isEnabled) {
-            IsShortcutEnabled = true;
-        } else {
-            IsShortcutEnabled = false;
-        }
     }
 }

@@ -50,7 +50,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4912460364784213962, guid: c1a9c4034893ffa49993796750ca1e19, type: 3}
       propertyPath: _fieldInfo
-      value: Temporarily open connected shortcut with a player token.
+      value: Open gates connected to this lever with a player token..
       objectReference: {fileID: 0}
     - target: {fileID: 4912460364784213962, guid: c1a9c4034893ffa49993796750ca1e19, type: 3}
       propertyPath: _fieldName
@@ -120,6 +120,26 @@ PrefabInstance:
     - target: {fileID: 1350621168003590520, guid: 9e96008560033f3429695efcd53c7c2a, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1859714917084386165, guid: 9e96008560033f3429695efcd53c7c2a, type: 3}
+      propertyPath: _gateIndex
+      value: -1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1859714917084386165, guid: 9e96008560033f3429695efcd53c7c2a, type: 3}
+      propertyPath: _usedSprite
+      value: 
+      objectReference: {fileID: 21300000, guid: aca70fcee482e90488ac08eb6b7d7e17, type: 3}
+    - target: {fileID: 3882223822493942178, guid: 9e96008560033f3429695efcd53c7c2a, type: 3}
+      propertyPath: m_Color.b
+      value: 0.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 3882223822493942178, guid: 9e96008560033f3429695efcd53c7c2a, type: 3}
+      propertyPath: m_Color.g
+      value: 0.27058825
+      objectReference: {fileID: 0}
+    - target: {fileID: 3882223822493942178, guid: 9e96008560033f3429695efcd53c7c2a, type: 3}
+      propertyPath: m_Color.r
+      value: 0.3764706
       objectReference: {fileID: 0}
     - target: {fileID: 5403732735585497679, guid: 9e96008560033f3429695efcd53c7c2a, type: 3}
       propertyPath: m_Name

@@ -2,12 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class G05_IE_AddedValue : G05_ItemEffect
+public class G05_IE_RollBonus : G05_ItemEffect
 {
-    private int[] _values = {-3, -2, -1, 1, 2, 3};
-    public G05_IE_AddedValue() {
-        EffectCategory = EffectCat.PostRoll;
-        EffectName = "Bonus Value";
+    private int[] _values = {100, 100, 100, 200};
+    public G05_IE_RollBonus() {
+        EffectCategory = EffectCat.PreRoll;
+        EffectName = "Roll Bonus";
         EffectValue = _values[Random.Range(0, _values.Length)];
 
         string prefix = "";
@@ -15,11 +15,11 @@ public class G05_IE_AddedValue : G05_ItemEffect
             prefix = "+";
         }
 
-        EffectValueText = prefix + EffectValue.ToString();
+        EffectValueText = prefix + EffectValue.ToString() + "%";
     }
 
     public override void ResolveEffect() {
         var dice = G05_GameManager.Instance.GetDice;
-        dice.AddBonusValue(EffectValue);
+        dice.AddBaseBonus(EffectValue);
     }
 }

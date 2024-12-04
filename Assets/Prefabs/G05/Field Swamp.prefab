@@ -76,6 +76,10 @@ PrefabInstance:
       propertyPath: _fieldSpeed
       value: -2
       objectReference: {fileID: 0}
+    - target: {fileID: 5619782424090648140, guid: d19195e11403eff48994f486399453a2, type: 3}
+      propertyPath: _shortcutIndex
+      value: -1
+      objectReference: {fileID: 0}
     - target: {fileID: 8376831132756289526, guid: d19195e11403eff48994f486399453a2, type: 3}
       propertyPath: m_Name
       value: Field Swamp

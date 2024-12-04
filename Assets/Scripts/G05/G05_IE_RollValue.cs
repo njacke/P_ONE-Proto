@@ -9,6 +9,7 @@ public class G05_IE_RollValue : G05_ItemEffect
         EffectCategory = EffectCat.PostRoll;
         EffectName = "Change Base";
         EffectValue = _values[Random.Range(0, _values.Length)];
+        EffectValueText = EffectValue.ToString();
     }
 
     public override void ResolveEffect() {

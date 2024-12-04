@@ -13,6 +13,7 @@ public class PlayMenuUI : MonoBehaviour
     [SerializeField] private GameObject _G02_info;
     [SerializeField] private GameObject _G03_info;
     [SerializeField] private GameObject _G04_info;
+    [SerializeField] private GameObject _G05_info;
 
     private Dictionary<MainMenuUI.MenuData.Games, GameObject> _gamesInfoDict;
 
@@ -25,6 +26,7 @@ public class PlayMenuUI : MonoBehaviour
             { MainMenuUI.MenuData.Games.G02, _G02_info },
             { MainMenuUI.MenuData.Games.G03, _G03_info },
             { MainMenuUI.MenuData.Games.G04, _G04_info },
+            { MainMenuUI.MenuData.Games.G05, _G05_info },
         };
 
         var newGameInfo = Instantiate(_gamesInfoDict[MainMenuUI.MenuData.SelectedGame], this.transform.position, Quaternion.identity);

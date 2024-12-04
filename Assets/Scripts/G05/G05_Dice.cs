@@ -11,7 +11,7 @@ public class G05_Dice : MonoBehaviour
     public int BaseValue { get ; private set; }
     public int BonusValue { get ; private set; }
     public int SpecialValue { get ; private set; } // player token specials & field speed
-    public int BaseMulti { get ; private set; }
+    public int BaseBonus { get ; private set; }
     public int TotalValue { get { return CalculateTotalValue(); } }
     [SerializeField] private int _size = 6;
 
@@ -32,11 +32,11 @@ public class G05_Dice : MonoBehaviour
         BonusValue = 0;
         SpecialValue = 0;
 
-        Debug.Log("Base multi pre-roll: " + BaseMulti);
+        Debug.Log("Base multi pre-roll: " + BaseBonus);
 
-        if (BaseMulti != 0) {
-            BonusValue += (BaseMulti - 1) * BaseValue;
-            BaseMulti = 0;
+        if (BaseBonus != 0) {
+            BonusValue += BaseBonus / 100 * BaseValue;
+            BaseBonus = 0;
         }
 
         OnDiceRoll?.Invoke(this);
@@ -60,8 +60,8 @@ public class G05_Dice : MonoBehaviour
         OnValueUpdated?.Invoke(this);
     }
 
-    public void AddBaseMulti(int value) {
-        BaseMulti += value;
+    public void AddBaseBonus(int value) {
+        BaseBonus += value;
     }
 
     private int CalculateTotalValue() {

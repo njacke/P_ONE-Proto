@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 using System.Linq;
-using UnityEditor.MemoryProfiler;
 
 public class G05_BoardManager : MonoBehaviour
 {
@@ -92,16 +91,10 @@ public class G05_BoardManager : MonoBehaviour
             }
 
             if (player.CurrentField.GetFieldType == G05_Field.FieldType.Finish) {
-                Debug.Log("Selected token has already finished");
+                G05_GameManager.Instance.GetGameLog.UpdateLog("Selected token has already finished");
                 return;
             }
 
-            var fields = _track.TrackFields.Where(x => x.GetFieldType == G05_Field.FieldType.Start
-                                                    || x.GetFieldType == G05_Field.FieldType.Main
-                                                    || x.GetFieldType == G05_Field.FieldType.Finish
-                                                    || x.GetFieldType == G05_Field.FieldType.Shortcut)
-                                        .ToArray();
-            var graph = _track.GetFieldGraph(fields);
 
             // SPECIAL VALUE (players specials & field speed)
             var specialValue = player.CurrentField.GetFieldSpeed;
@@ -110,6 +103,12 @@ public class G05_BoardManager : MonoBehaviour
             if (G05_GameManager.Instance.GetDice.BaseValue == 1 && player.GetPlayerType == G05_Player.PlayerType.Underdog) {
                 specialValue += 3;
             }
+
+            var fields = _track.TrackFields.Where(x => x.GetFieldType == G05_Field.FieldType.Start
+                                                    || x.GetFieldType == G05_Field.FieldType.Main
+                                                    || x.GetFieldType == G05_Field.FieldType.Finish)
+                                        .ToArray();
+            var graph = _track.GetFieldGraph(fields);
 
             // hardcoded PERFORMER skill for prototype (+1 bonus for each unit in range on the track)
             if (player.GetPlayerType == G05_Player.PlayerType.Performer) {
@@ -255,17 +254,17 @@ public class G05_BoardManager : MonoBehaviour
         }
 
         if (G05_GameManager.Instance.GetTurnState != G05_GameManager.TurnState.Move && SelectedToken != null) {
-            Debug.Log("Roll the dice first.");
+            G05_GameManager.Instance.GetGameLog.UpdateLog("Roll the dice first.");
             return;
         }
 
         if (SelectedToken == null || _eligibleFields.Length == 0) {
-            Debug.Log("No token selected or no eligible move possible.");
+            G05_GameManager.Instance.GetGameLog.UpdateLog("No token selected or no eligible move possible.");
             return;
         }
 
         if (SelectedToken.GetTokenType != G05_Token.TokenType.Player) {
-            Debug.Log("Selected token is not controllable");
+            G05_GameManager.Instance.GetGameLog.UpdateLog("Selected token is not controllable");
             return;
         }
 
@@ -283,7 +282,7 @@ public class G05_BoardManager : MonoBehaviour
             SelectedToken.MoveToField(fieldHit);
             OnPlayerMoved?.Invoke(this);
         } else {
-            Debug.Log("Suggested move is not eligible.");
+            G05_GameManager.Instance.GetGameLog.UpdateLog("Suggested move is not eligible.");
         }
     }
 
@@ -307,7 +306,7 @@ public class G05_BoardManager : MonoBehaviour
             //Debug.Log("Setting enemy aciton available to true");
         }
 
-        Debug.Log("Enemy turn ended.");
+        G05_GameManager.Instance.GetGameLog.UpdateLog("Enemy turn ended.");
         OnEnemyTurnResolved?.Invoke(this);
     }
 
