@@ -81,21 +81,23 @@ MonoBehaviour:
 
     RULES
 
-    Player
-    tokens can only move forward (towards finish) and enemy tokens can also move
-    backwards (unless stated othwewise).
+    Dice''s
+    Total Value can''t be lower than 1.
 
-    Tokens can''t move to a field occupied
-    by a token of the same faction (player/enemy).
+    Player tokens can only move forward
+    (towards finish) and enemy tokens can also move backwards (unless stated othwewise).
 
-    Tokens moving to a field
-    occupied by another token will kill that token.
+    Tokens
+    can''t move to a field occupied by a token of the same faction (player/enemy).
 
-    Once placed on a finish
-    tile token can no longer be moved.
+    Tokens
+    moving to a field occupied by another token will kill that token.
 
-    Game ends when all player tokens are
-    dead or all remaining player tokens are placed on finish tiles.'
+    Once placed
+    on a finish tile token can no longer be moved.
+
+    Game ends when all player
+    tokens are dead or all remaining player tokens are placed on finish tiles.'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}

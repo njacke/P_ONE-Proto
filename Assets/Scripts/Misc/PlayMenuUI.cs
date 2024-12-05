@@ -31,6 +31,7 @@ public class PlayMenuUI : MonoBehaviour
 
         var newGameInfo = Instantiate(_gamesInfoDict[MainMenuUI.MenuData.SelectedGame], this.transform.position, Quaternion.identity);
         newGameInfo.transform.SetParent(this.transform);
+        newGameInfo.transform.localScale = Vector3.one;
     }
 
     private void Start() {

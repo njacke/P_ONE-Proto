@@ -130,6 +130,7 @@ public class G03_HudUI : MonoBehaviour
             }
 
             UpdateObjectiveUI(objective, 100);
+            newObjectiveDisplay.transform.localScale = Vector3.one;
         }
     }
 

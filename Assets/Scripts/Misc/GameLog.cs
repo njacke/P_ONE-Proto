@@ -16,6 +16,7 @@ public class GameLog : Singleton<GameLog>
             var newLogText = Instantiate(_logTextPrefab, this.transform.position, Quaternion.identity).GetComponent<TextMeshProUGUI>();
             newLogText.gameObject.transform.SetParent(this.transform);
             _logTextsList.Add(newLogText);
+            newLogText.transform.localScale = Vector3.one;
         }
 
         foreach (var logText in _logTextsList) {

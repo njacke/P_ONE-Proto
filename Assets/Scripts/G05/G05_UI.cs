@@ -136,6 +136,7 @@ public class G05_UI : MonoBehaviour
             newItem.SlotIndex = i;
             newItem.SetEmpty();
             ItemSlots[i] = newItem;
+            newItem.transform.localScale = Vector3.one;
         }
 
         OnItemInitDone?.Invoke();

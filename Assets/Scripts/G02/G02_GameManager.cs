@@ -13,6 +13,7 @@ public class G02_GameManager : Singleton<G02_GameManager>
     [SerializeField] private float _lvlUpXpReq = 5f;
     [SerializeField] private float _lvlUpXpReqAdj = .2f;
     [SerializeField] private G02_UpgradeUI _upgradeUI;
+    [SerializeField] private Collider2D[] _borderColliders;
 
     public float MinXBoundry { get; private set; }
     public float MaxXBoundry { get; private set; }
@@ -25,6 +26,11 @@ public class G02_GameManager : Singleton<G02_GameManager>
     protected override void Awake() {
         base.Awake();
         SetUpMoveBoundries();
+
+        _borderColliders[0].offset = new Vector2(0, MaxYBoundry + 1);
+        _borderColliders[1].offset = new Vector2(0, MinYBoundry - 1);
+        _borderColliders[2].offset = new Vector2(MaxXBoundry + 1, 0);
+        _borderColliders[3].offset = new Vector2(MinXBoundry - 1, 0);
     }
 
     private void Start() {
