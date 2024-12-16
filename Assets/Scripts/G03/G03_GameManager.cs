@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 
 public class G03_GameManager : Singleton<G03_GameManager>
@@ -26,6 +25,10 @@ public class G03_GameManager : Singleton<G03_GameManager>
         base.Awake();
         SetUpMoveBoundries();
         SetObjectiveCounts();
+    }
+
+    private void Start() {
+        Time.timeScale = 1f;
     }
 
     private void OnEnable() {

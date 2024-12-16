@@ -34,15 +34,18 @@ public class G02_GameManager : Singleton<G02_GameManager>
     }
 
     private void Start() {
+        Time.timeScale = 1f;
         OnXpChange?.Invoke(_currentLvl, _currentLvlXp, Mathf.CeilToInt(_lvlUpXpReq));
     }
 
     private void Update() {
         if (Input.GetKeyDown(KeyCode.Escape)) {
+            Time.timeScale = 1f;
             SceneManager.LoadScene("PlayMenu");
         }
         
         if (Input.GetKeyDown(KeyCode.F5)) {
+            Time.timeScale = 1f;
             var activeScene = SceneManager.GetActiveScene();
             SceneManager.LoadScene(activeScene.name);
         }

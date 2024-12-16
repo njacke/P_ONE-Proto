@@ -50,6 +50,7 @@ public class G01_GameManager : Singleton<G01_GameManager>
     }
 
     private void Start() {
+        Time.timeScale = 1f;
         OnGameStateChanged?.Invoke();
     }
 

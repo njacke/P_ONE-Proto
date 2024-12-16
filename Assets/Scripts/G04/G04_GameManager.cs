@@ -27,6 +27,7 @@ public class G04_GameManager : Singleton<G04_GameManager>
     private float _totalScore = 0f;
 
     private void Start() {
+        Time.timeScale = 1f;
         _remainingCombines = _maxCombines;
         _remainingBlocks = _maxBlocksStart;
         OnStateChanged?.Invoke(this);

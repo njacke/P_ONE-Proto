@@ -50,6 +50,10 @@ public class G05_GameManager : Singleton<G05_GameManager>
         };
     }
 
+    private void Start() {
+        Time.timeScale = 1f;
+    }
+
     private void Update() {
         if (Input.GetKeyDown(KeyCode.Escape)) {
             SceneManager.LoadScene("PlayMenu");
