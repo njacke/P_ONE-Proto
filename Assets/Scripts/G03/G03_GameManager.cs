@@ -72,7 +72,7 @@ public class G03_GameManager : Singleton<G03_GameManager>
             SceneManager.LoadScene("PlayMenu");
         }
         
-        if (Input.GetKeyDown(KeyCode.F5)) {
+        if (Input.GetKeyDown(KeyCode.R)) {
             var activeScene = SceneManager.GetActiveScene();
             SceneManager.LoadScene(activeScene.name);
         }

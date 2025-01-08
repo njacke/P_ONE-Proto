@@ -38,7 +38,7 @@ public class G04_GameManager : Singleton<G04_GameManager>
             SceneManager.LoadScene("PlayMenu");
         }
 
-        if (Input.GetKeyDown(KeyCode.F5)) {
+        if (Input.GetKeyDown(KeyCode.R)) {
             var activeScene = SceneManager.GetActiveScene();
             SceneManager.LoadScene(activeScene.name);
         }

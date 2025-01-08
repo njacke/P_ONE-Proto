@@ -44,7 +44,7 @@ public class G02_GameManager : Singleton<G02_GameManager>
             SceneManager.LoadScene("PlayMenu");
         }
         
-        if (Input.GetKeyDown(KeyCode.F5)) {
+        if (Input.GetKeyDown(KeyCode.R)) {
             Time.timeScale = 1f;
             var activeScene = SceneManager.GetActiveScene();
             SceneManager.LoadScene(activeScene.name);
